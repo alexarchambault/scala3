@@ -1432,7 +1432,7 @@ trait ParallelTesting extends RunnerOrchestration:
 
   /** Compiles a single file from the string path `f` using the supplied flags */
   def compileFile(f: String, flags: TestFlags)(implicit testGroup: TestGroup): CompilationTest = {
-    val sourceFile = new JFile(f)
+    val sourceFile = new JFile(Properties.repoRoot.toFile, f)
     val parent = sourceFile.getParentFile
     val outDir =
       defaultOutputDir + testGroup + JFile.separator +
