@@ -1,0 +1,424 @@
+//| mill-version: 1.1.0-RC2
+
+import com.github.lolgab.mill.mima.Mima
+import scala3build.*
+
+import java.io.File
+
+import mill.*
+import mill.scalalib.*
+import mill.scalalib.publish.*
+import java.text.SimpleDateFormat
+import java.util.TimeZone
+import mill.api.Task.Simple
+import mill.api.BuildCtx
+
+def enableBspForFinalModules = false
+
+trait Scala3JavaModule extends JavaModule with PublishModule with Mima {
+  trait Scala3JavaTests extends JavaTests with TestModule.Junit4 {
+    def testSources: T[Seq[PathRef]]
+    def sources = testSources
+    def testParallelism = false
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      mvn"com.github.sbt:junit-interface:0.13.3"
+    )
+  }
+
+  def jvmId = "17" // force external zinc worker
+
+  def pomSettings = PomSettings(
+    description = "sumlib",
+    organization = "org.scala-lang",
+    url = "https://github.com/scala/scala3",
+    licenses = Seq(License.`Apache-2.0`),
+    versionControl = VersionControl.github("scala", "scala3"),
+    developers = Seq(Developer("scala", "The Scala Team", "https://scala-lang.org", email = "security@scala-lang.org"))
+  )
+  def publishVersion = Versions.dottyVersion
+
+  def javacOptions = super.javacOptions() ++ Seq(
+    "--release", Versions.minimumJVMVersion
+  )
+
+  def manifest = super.manifest().add(
+    "Automatic-Module-Name" ->
+      s"${pomSettings().organization.replaceAll("-", ".")}.${artifactName().replaceAll("-", ".")}"
+  )
+
+  def runClasspathAsJars: T[Seq[PathRef]] = Task {
+    resolvedRunMvnDeps().toSeq ++
+      transitiveJars() ++
+      Seq(jar())
+  }
+}
+
+trait Scala3Module extends Scala3JavaModule with ScalaModule {
+  def scalaVersion = Versions.referenceVersion
+  def scalacOptions = super.scalacOptions() ++ Seq(
+    "-feature",
+    "-deprecation",
+    "-unchecked",
+    //"-Wconf:cat=deprecation&msg=Unsafe:s",    // example usage
+    "-Werror",
+    //"-Wunused:all",
+    //"-rewrite", // requires -Werror:false since no rewrites are applied with errors
+    "-encoding", "UTF8",
+    "-language:implicitConversions",
+    "--java-output-version", Versions.minimumJVMVersion
+  )
+
+  trait Scala3Tests extends ScalaTests with Scala3JavaTests
+}
+
+object interfaces extends Scala3JavaModule
+
+object library extends Module {
+
+  def src = Task.Source("src")
+
+  def scala3Sources = Task {
+    val src0 = src().path
+    os.walk(src0)
+      .filter(os.isFile)
+      .filter { f =>
+        f.last.endsWith(".scala") || {
+          f.last.endsWith(".java") && {
+            val subPath = f.subRelativeTo(src0)
+            subPath.startsWith(os.sub / "scala/annotation/internal") ||
+            subPath.startsWith(os.sub / "scala/runtime/function")
+          }
+        }
+      }
+      .filter(f => os.read.lines(f).forall(_.trim != "import scala.language.`2.13`"))
+      .map(PathRef(_))
+  }
+
+  trait Library extends Scala3Module {
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      mvn"org.scala-lang:scala-library:${Versions.stdlibNonBootstrappedVersion}"
+    )
+
+    def scalacOptions = super.scalacOptions() ++ Seq(
+      "-sourcepath", sources().map(_.path).distinct.mkString(File.pathSeparator),
+      "-Yexplicit-nulls"
+    )
+
+    /*
+      TODO Add library-aux in source JAR?
+
+      (Compile / packageSrc / mappings) ++= {
+        val auxBase = (ThisBuild / baseDirectory).value / "library-aux/src"
+        auxBase ** "*.scala" pair io.Path.relativeTo(auxBase)
+      }
+
+    */
+  }
+
+  object bootstrapping extends Library {
+    def sources = library.scala3Sources
+    def runClasspath = Task {
+      super.runClasspath().filter { ref =>
+        ref.path.startsWith(BuildCtx.workspaceRoot) ||
+          !ref.path.last.startsWith("scala3-library_3")
+      }
+    }
+  }
+  object pure extends Library with BuiltInCompiler {
+    def sources = Task {
+      Seq(library.src())
+    }
+    def scalacOptions =
+      // TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
+      super.scalacOptions().filter(_ != "-Werror") ++
+        Seq("-Yno-stdlib-patches")
+    def moduleDeps = Nil
+    def mandatoryMvnDeps = Nil
+    def mvnDeps = Nil
+    def compileClasspath = Nil
+    def runClasspath = Task {
+      Seq(jar())
+    }
+  }
+  object published extends Library with BuiltInCompiler {
+    def sources = library.scala3Sources
+    def moduleDeps = Nil
+    def mandatoryMvnDeps = Nil
+    def runClasspath = Task {
+      super.runClasspath().filter(ref => !ref.path.startsWith(BuildCtx.workspaceRoot)) ++
+        Seq(jar())
+    }
+  }
+}
+
+trait BuiltInLibrary extends ScalaModule {
+  def libraryModule: PublishModule = library.bootstrapping
+  def moduleDeps: Seq[PublishModule] =
+    super.moduleDeps.collect {
+      case p: PublishModule => p
+      case _ => ???
+    } ++
+      Seq(libraryModule)
+  def scalaLibraryMvnDeps = Nil
+  def scalaCompilerClasspath: T[Seq[PathRef]] = Task {
+    defaultResolver().classpath(
+      Lib.scalaCompilerMvnDeps(scalaOrganization(), scalaVersion())
+        .map(_.exclude((scalaOrganization(), "scala3-library_3")))
+    ) ++ library.bootstrapping.runClasspath()
+  }
+
+  def coursierDependencyTask = Task.Anon {
+    val csDep = super.coursierDependencyTask()
+    csDep.addExclusion(
+      coursier.Organization("org.scala-lang"), coursier.ModuleName("scala3-library_3")
+    )
+  }
+}
+
+trait BuiltInCompiler extends BuiltInLibrary {
+  def enableBsp = enableBspForFinalModules
+  def scalaCompilerClasspath: T[Seq[PathRef]] = Task {
+    // Why runClasspathAsJars rather than runClasspath?
+    compiler.bootstrapping.runClasspathAsJars()
+  }
+}
+
+object tasty extends Module {
+  def sources = Task.Sources("src")
+
+  trait Tasty extends Scala3Module with BuiltInLibrary {
+    def sources = tasty.sources
+    def scalacOptions = super.scalacOptions() ++ Seq(
+      "-source:3.0-migration"
+    )
+  }
+
+  object bootstrapping extends Tasty
+  object published extends Tasty with BuiltInCompiler {
+    def libraryModule: PublishModule = library.published
+    def mandatoryMvnDeps = Nil
+  }
+  object pure extends Tasty with BuiltInCompiler {
+    def libraryModule: PublishModule = library.pure
+    def mandatoryMvnDeps = Nil
+    def resolvedMvnDeps = Nil
+    def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
+  }
+}
+
+object compiler extends Module {
+  def mainSources = Task.Source("src")
+  def sources = Task {
+    Seq(mainSources(), shadedSources())
+  }
+  def nonBootstrappedSources = Task.Source("src-non-bootstrapped")
+
+  def testSources = Task.Sources("test")
+  def testResources = Task.Sources("test-resources")
+
+  def compilerPropertiesResources = Task {
+    val file = Task.dest / "compiler.properties"
+    val dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss")
+    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"))
+    val contents =                //2.11.11.v20170413-090219-8a413ba7cc
+      s"""version.number=${interfaces.publishVersion()}
+         |maven.version.number=${interfaces.publishVersion()}
+         |git.hash=${VersionUtil.gitHash}
+         |copyright.string=Copyright 2002-${VersionUtil.currentYear}, LAMP/EPFL
+       """.stripMargin
+    os.write(file, contents)
+
+    PathRef(Task.dest)
+  }
+
+  def shadedSources = Task {
+
+    val shadedDeps = Seq(
+      Shading.csDep("org.scala-js", "scalajs-ir_2.13", Versions.scalaJSVersion),
+      Shading.csDep("com.lihaoyi", "pprint_3", "0.9.3"),
+      Shading.csDep("com.lihaoyi", "fansi_3", "0.5.1"),
+      Shading.csDep("com.lihaoyi", "sourcecode_3", "0.4.4")
+    )
+
+    // Define patches as a map from search text to replacement text
+    val patches = Map(
+      "import scala" -> "import _root_.scala",
+      " scala.collection." -> " _root_.scala.collection.",
+      "def apply(c: Char): Trie[T]" -> "def apply(c: Char): Trie[T] | Null",
+      "var head: Iterator[T] = null" -> "var head: Iterator[T] | Null = null",
+      "if (head != null && head.hasNext) true" -> "if (head != null && head.nn.hasNext) true",
+      "head.next()" -> "head.nn.next()",
+      "abstract class Walker" -> "@scala.annotation.nowarn abstract class Walker",
+      "object TPrintLowPri" -> "@scala.annotation.nowarn object TPrintLowPri",
+      "x.toString match{" -> "scala.runtime.ScalaRunTime.stringOf(x) match{"
+    )
+
+    val sourceJars = interfaces.defaultResolver().classpath(
+      shadedDeps.map(_.withTransitive(false)),
+      sources = true
+    )
+    for (jar <- sourceJars)
+      os.unzip(jar.path, Task.dest)
+
+    val patchUsageCounter = scala.collection.mutable.Map(patches.keys.map(_ -> 0).toSeq*)
+    for (f <- os.walk(Task.dest) if os.isFile(f) && f.last.endsWith(".scala")) {
+      val lines = os.read.lines(f).toList
+      val (isScalaJsStuff, updatedLines) = Shading.replacePackage(Shading.insertUnsafeNullsImport(lines)) {
+        case "org.scalajs.ir" => "dotty.tools.sjs.ir"
+      }
+      var text = updatedLines.mkString(System.lineSeparator())
+      if (!isScalaJsStuff && f.last != "CollectionName.scala") {
+        text = "package dotty.shaded" + System.lineSeparator() + text
+
+        // Apply patches and count usage
+        for ((search, replacement) <- patches if text.contains(search)) {
+          text = text.replace(search, replacement)
+          patchUsageCounter(search) += 1
+        }
+      }
+      os.write.over(f, text)
+    }
+
+    // Assert that all patches were applied at least once
+    val unappliedPatches = patchUsageCounter.filter(_._2 == 0).keys
+    if (unappliedPatches.nonEmpty)
+      sys.error(s"Patches were not applied: ${unappliedPatches.mkString(", ")}")
+
+    PathRef(Task.dest)
+  }
+
+  trait Compiler extends Scala3Module with BuiltInLibrary { outer =>
+    def moduleDeps = super.moduleDeps ++ Seq(interfaces)
+    def sources = compiler.sources
+    def resources = Task {
+      super.resources() ++ Seq(compilerPropertiesResources())
+    }
+
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      mvn"org.scala-lang.modules:scala-asm:9.8.0-scala-1", // used by the backend
+      mvn"org.scala-sbt:compiler-interface:1.10.7",
+      mvn"org.jline:jline-reader:3.29.0", // used by the REPL
+      mvn"org.jline:jline-terminal:3.29.0",
+      mvn"org.jline:jline-terminal-jni:3.29.0" // needed for Windows
+    )
+
+    def scalacOptions =
+      super.scalacOptions()
+        // TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
+        .filter(_ != "-Werror") ++
+      Seq(
+        // Note: bench/profiles/projects.yml should be updated accordingly.
+        "-Yexplicit-nulls",
+        "-Wsafe-init",
+
+        // Use source 3.3 to avoid fatal migration warnings on scalajs-ir
+        "-source", "3.3",
+
+        /* Ignore a deprecation warning about AnyRefMap in scalajs-ir. The latter
+         * cross-compiles for 2.12, and therefore AnyRefMap remains useful there
+         * for performance reasons.
+         * The build of Scala.js core does the same thing.
+         */
+        "-Wconf:cat=deprecation&origin=scala\\.collection\\.mutable\\.AnyRefMap.*:s",
+
+        // FIXME Mill: not added by sbt, but seems necessary for us here
+        "-experimental"
+      )
+
+    def manifest = super.manifest().add(
+      "Git-Hash" -> VersionUtil.gitHash
+    )
+
+    def mainClass = Some("dotty.tools.dotc.Main")
+
+    trait CompilerTests extends Scala3Tests {
+      def testSources = compiler.testSources
+      def resources = Task {
+        super.resources() ++ compiler.testResources()
+      }
+      def mvnDeps = super.mvnDeps() ++ Seq(
+        mvn"io.get-coursier:coursier_2.13:2.0.16".exclude(("org.scala-lang", "scala-library"))
+      )
+
+      def testArgsDefault = Seq("--exclude-categories=dotty.BootstrappedOnlyTests")
+      def testSandboxWorkingDir = false
+
+      def forkArgs: T[Seq[String]] = Task {
+        val compilerClassPath = outer.compileClasspath().map(_.path)
+        def artifactFor(moduleName: String): os.Path =
+          compilerClassPath
+            .iterator
+            .filter(os.isFile)
+            .filter(_.last.endsWith(".jar"))
+            .find(_.last.startsWith(moduleName + "-"))
+            .getOrElse {
+              sys.error(s"No JAR found for $moduleName in compiler class path $compilerClassPath")
+            }
+
+        super.forkArgs() ++ Seq(
+          s"-Ddotty.tests.dottyCompilerManagedSources=${mainSources().path}",
+          s"-Ddotty.tests.classes.dottyInterfaces=${interfaces.jar().path}",
+          s"-Ddotty.tests.classes.dottyCompiler=${outer.jar().path}",
+          s"-Ddotty.tests.classes.tastyCore=${tasty.bootstrapping.jar().path}",
+          s"-Ddotty.tests.classes.compilerInterface=${artifactFor("compiler-interface")}",
+          s"-Ddotty.tests.classes.scalaLibrary=${libraryModule.runClasspath().map(_.path).filter(os.exists).mkString(File.pathSeparator)}",
+          s"-Ddotty.tests.classes.scalaAsm=${artifactFor("scala-asm")}",
+          s"-Ddotty.tests.classes.jlineTerminal=${artifactFor("jline-terminal")}",
+          s"-Ddotty.tests.classes.jlineReader=${artifactFor("jline-reader")}",
+          s"-Ddotty.tools.dotc.semanticdb.test=${BuildCtx.workspaceRoot / "tests/semanticdb"}"
+        )
+      }
+
+      def runClasspath = Task {
+        // really necessary?
+        val (localCp, managedCp) = super.runClasspath().partition(_.path.startsWith(BuildCtx.workspaceRoot))
+        localCp ++ managedCp
+      }
+    }
+  }
+
+  object bootstrapping extends Compiler {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      tasty.bootstrapping
+    )
+    def sources = Task {
+      super.sources() ++ Seq(nonBootstrappedSources())
+    }
+
+    object test extends CompilerTests
+  }
+  object published extends Compiler with BuiltInCompiler {
+    def libraryModule: PublishModule = library.published
+    def moduleDeps = super.moduleDeps ++ Seq(
+      tasty.published
+    )
+    def mandatoryMvnDeps = Nil
+
+    object test extends CompilerTests with BuiltInCompiler {
+      def libraryModule: PublishModule = library.published
+      def mandatoryMvnDeps = Nil
+    }
+  }
+  object pure extends Compiler with BuiltInCompiler {
+    def libraryModule: PublishModule = library.pure
+    def moduleDeps = super.moduleDeps ++ Seq(
+      tasty.pure
+    )
+    def mandatoryMvnDeps = Nil
+    def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
+
+    object test extends CompilerTests with BuiltInCompiler {
+      def libraryModule: PublishModule = library.pure
+      def mandatoryMvnDeps = Nil
+      def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
+    }
+  }
+}
+
+object staging extends Scala3Module with BuiltInCompiler {
+  def moduleDeps = Seq(compiler.pure)
+  def scalacOptions = super.scalacOptions() ++
+    // FIXME Not sure why we have to add this, it seems it's not added in the sbt build
+    Seq("-experimental")
+}
+

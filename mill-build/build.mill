@@ -1,0 +1,9 @@
+import mill.meta.MillBuildRootModule
+import mill.javalib.*
+
+object `package` extends MillBuildRootModule {
+  def mvnDeps = Seq(
+    mvn"com.github.lolgab::mill-mima_mill1:0.2.0",
+    mvn"org.eclipse.jgit:org.eclipse.jgit:7.4.0.202509020913-r"
+  )
+}
