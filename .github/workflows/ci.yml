@@ -1,0 +1,23 @@
+name: CI
+on:
+  push:
+    branches:
+    - mill-build
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 17
+    - name: Bootstrapping tests
+      run: ./mill -i __.bootstrapping.test
+    - name: Final tests
+      run: ./mill -i __.final.test
