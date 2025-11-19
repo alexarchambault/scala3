@@ -88,7 +88,7 @@ extends Reporter with UniqueMessagePositions with HideNonSensicalMessages with M
 object TestReporter {
   private val testLogsDirName: String = "testlogs"
   private val failedTestsFileName: String = "last-failed.log"
-  private val failedTestsFile: JFile = new JFile(s"$testLogsDirName/$failedTestsFileName")
+  private val failedTestsFile: JFile = new JFile(Properties.repoRoot.toFile, s"$testLogsDirName/$failedTestsFileName")
 
   private var outFile: JFile = uninitialized
   private var logWriter: PrintWriter = uninitialized
@@ -99,8 +99,8 @@ object TestReporter {
     val df0 = new SimpleDateFormat("yyyy-MM-dd")
     val df1 = new SimpleDateFormat("yyyy-MM-dd-'T'HH-mm-ss")
     val folder = s"$testLogsDirName/tests-${df0.format(date)}"
-    new JFile(folder).mkdirs()
-    outFile = new JFile(s"$folder/tests-${df1.format(date)}.log")
+    new JFile(Properties.repoRoot.toFile, folder).mkdirs()
+    outFile = new JFile(Properties.repoRoot.toFile, s"$folder/tests-${df1.format(date)}.log")
     logWriter = new PrintWriter(new FileOutputStream(outFile, true))
     failedTestsWriter = new PrintWriter(new FileOutputStream(failedTestsFile, false))
   }

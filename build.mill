@@ -95,7 +95,6 @@ object library extends Module {
   }
 
   trait Library extends Scala3Module {
-    def sources = library.scala3Sources
     def mvnDeps = super.mvnDeps() ++ Seq(
       mvn"org.scala-lang:scala-library:${Versions.stdlibNonBootstrappedVersion}"
     )
@@ -117,6 +116,7 @@ object library extends Module {
   }
 
   object bootstrapping extends Library {
+    def sources = library.scala3Sources
     def runClasspath = Task {
       super.runClasspath().filter { ref =>
         ref.path.startsWith(BuildCtx.workspaceRoot) ||
@@ -124,8 +124,30 @@ object library extends Module {
       }
     }
   }
-  object `final` extends Library with BuiltInCompiler {
+  object pure extends Library with BuiltInCompiler {
+    def sources = Task {
+      Seq(library.src())
+    }
+    def scalacOptions =
+      // TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
+      super.scalacOptions().filter(_ != "-Werror") ++
+        Seq("-Yno-stdlib-patches")
+    def moduleDeps = Nil
     def mandatoryMvnDeps = Nil
+    def mvnDeps = Nil
+    def compileClasspath = Nil
+    def runClasspath = Task {
+      Seq(jar())
+    }
+  }
+  object published extends Library with BuiltInCompiler {
+    def sources = library.scala3Sources
+    def moduleDeps = Nil
+    def mandatoryMvnDeps = Nil
+    def runClasspath = Task {
+      super.runClasspath().filter(ref => !ref.path.startsWith(BuildCtx.workspaceRoot)) ++
+        Seq(jar())
+    }
   }
 }
 
@@ -172,9 +194,15 @@ object tasty extends Module {
   }
 
   object bootstrapping extends Tasty
-  object `final` extends Tasty with BuiltInCompiler {
-    def libraryModule: PublishModule = library.`final`
+  object published extends Tasty with BuiltInCompiler {
+    def libraryModule: PublishModule = library.published
     def mandatoryMvnDeps = Nil
+  }
+  object pure extends Tasty with BuiltInCompiler {
+    def libraryModule: PublishModule = library.pure
+    def mandatoryMvnDeps = Nil
+    def resolvedMvnDeps = Nil
+    def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
   }
 }
 
@@ -309,7 +337,7 @@ object compiler extends Module {
         super.resources() ++ compiler.testResources()
       }
       def mvnDeps = super.mvnDeps() ++ Seq(
-        mvn"io.get-coursier:coursier_2.13:2.0.16"
+        mvn"io.get-coursier:coursier_2.13:2.0.16".exclude(("org.scala-lang", "scala-library"))
       )
 
       def testArgsDefault = Seq("--exclude-categories=dotty.BootstrappedOnlyTests")
@@ -336,8 +364,8 @@ object compiler extends Module {
           s"-Ddotty.tests.classes.scalaAsm=${artifactFor("scala-asm")}",
           s"-Ddotty.tests.classes.jlineTerminal=${artifactFor("jline-terminal")}",
           s"-Ddotty.tests.classes.jlineReader=${artifactFor("jline-reader")}",
-          s"-Ddotty.tests.repoRoot=${BuildCtx.workspaceRoot}"
-          // s"-Ddotty.tools.dotc.semanticdb.test=${(ThisBuild / baseDirectory).value/"tests"/"semanticdb"}"
+          s"-Ddotty.tests.repoRoot=${BuildCtx.workspaceRoot}",
+          s"-Ddotty.tools.dotc.semanticdb.test=${BuildCtx.workspaceRoot / "tests/semanticdb"}"
         )
       }
 
@@ -359,19 +387,36 @@ object compiler extends Module {
 
     object test extends CompilerTests
   }
-  object `final` extends Compiler with BuiltInCompiler {
-    def libraryModule: PublishModule = library.`final`
+  object published extends Compiler with BuiltInCompiler {
+    def libraryModule: PublishModule = library.published
     def moduleDeps = super.moduleDeps ++ Seq(
-      tasty.`final`
+      tasty.published
     )
     def mandatoryMvnDeps = Nil
 
-    object test extends CompilerTests with BuiltInCompiler
+    object test extends CompilerTests with BuiltInCompiler {
+      def libraryModule: PublishModule = library.published
+      def mandatoryMvnDeps = Nil
+    }
+  }
+  object pure extends Compiler with BuiltInCompiler {
+    def libraryModule: PublishModule = library.pure
+    def moduleDeps = super.moduleDeps ++ Seq(
+      tasty.pure
+    )
+    def mandatoryMvnDeps = Nil
+    def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
+
+    object test extends CompilerTests with BuiltInCompiler {
+      def libraryModule: PublishModule = library.pure
+      def mandatoryMvnDeps = Nil
+      def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
+    }
   }
 }
 
 object staging extends Scala3Module with BuiltInCompiler {
-  def moduleDeps = Seq(compiler.`final`)
+  def moduleDeps = Seq(compiler.pure)
   def scalacOptions = super.scalacOptions() ++
     // FIXME Not sure why we have to add this, it seems it's not added in the sbt build
     Seq("-experimental")

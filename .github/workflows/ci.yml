@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  bootstrapping-tests:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -17,7 +17,33 @@ jobs:
     - uses: coursier/setup-action@v1
       with:
         jvm: 17
-    - name: Bootstrapping tests
+    - name: Test
       run: ./mill -i __.bootstrapping.test
-    - name: Final tests
-      run: ./mill -i __.final.test
+
+  published-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 17
+    - name: Test
+      run: ./mill -i __.published.test
+
+  pure-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 17
+    - name: Test
+      run: ./mill -i __.pure.test

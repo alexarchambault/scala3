@@ -79,7 +79,7 @@ object TestSources {
   // load lists
 
   private def loadList(path: String): List[String] = {
-    val list = Files.readAllLines(Paths.get(path))
+    val list = Files.readAllLines(Properties.repoRoot.resolve(path))
       .iterator()
       .asScala
       .map(_.trim)                     // allow indentation

@@ -37,7 +37,7 @@ class IdempotencyTests {
     val orderIdempotency = {
       val tests =
         for {
-          testDir <- new JFile("tests/order-idempotency").listFiles() if testDir.isDirectory
+          testDir <- new JFile(Properties.repoRoot.toFile, "tests/order-idempotency").listFiles() if testDir.isDirectory
         } yield {
           val sources = TestSources.sources(testDir.toPath)
           aggregateTests(

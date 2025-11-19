@@ -28,10 +28,10 @@ class SettingsTests {
     assertEquals("'not_here' does not exist or is not a directory or .jar file", reporter.allErrors.head.message)
 
   @Test def jarOutput: Unit =
-    val source = "tests/pos/Foo.scala"
-    val out = Paths.get("out/jaredFoo.jar").normalize
+    val source = dotty.Properties.repoRoot.resolve("tests/pos/Foo.scala")
+    val out = dotty.Properties.repoRoot.resolve("out/jaredFoo.jar").normalize
     if (Files.exists(out)) Files.delete(out)
-    val options = Array("-classpath", TestConfiguration.basicClasspath, "-d", out.toString, source)
+    val options = Array("-classpath", TestConfiguration.basicClasspath, "-d", out.toString, source.toString)
     val reporter = Main.process(options)
     assertEquals(0, reporter.errorCount)
     assertTrue(Files.exists(out))

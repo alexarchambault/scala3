@@ -23,21 +23,25 @@ import dotty.tools.dotc.reporting.TestReporter
 import dotty.tools.io.{Directory, File, Path, JarArchive}
 
 import dotty.tools.vulpix.TestConfiguration
+import dotty.Properties
 
 class PathPicklingTest {
 
   @Test def test(): Unit = {
-    val out = JFile("out/testPathPickling")
-    val cwd = JFile("").getAbsolutePath()
+    val out = Properties.repoRoot.resolve("out/testPathPickling").toFile
+    val cwd = Properties.repoRoot.toString
     delete(out)
     out.mkdirs()
 
     locally {
       val ignorantProcessLogger = ProcessLogger(_ => ())
       val options = TestConfiguration.defaultOptions
-        .and("-d", s"$out/out.jar")
-        .and("-sourceroot", "tests/pos")
-        .and(s"$cwd/tests/pos/i10430/lib.scala", s"$cwd/tests/pos/i10430/app.scala")
+        .and("-d", new JFile(out, "out.jar").toString)
+        .and("-sourceroot", Properties.repoRoot.resolve("tests/pos").toString)
+        .and(
+          Properties.repoRoot.resolve("tests/pos/i10430/lib.scala").toString,
+          Properties.repoRoot.resolve("tests/pos/i10430/app.scala").toString
+        )
       val reporter = TestReporter.reporter(System.out, logLevel = ERROR)
       val rep = Main.process(options.all, reporter)
       assertFalse("Compilation failed.", rep.hasErrors)
@@ -45,7 +49,7 @@ class PathPicklingTest {
 
     val printedTasty =
       val sb = new StringBuffer
-      val jar = JarArchive.open(Path(s"$out/out.jar"), create = false)
+      val jar = JarArchive.open(Path(new JFile(out, "out.jar").toString), create = false)
       try
         for file <- jar.iterator if file.name.endsWith(".tasty") do
           sb.append(TastyPrinter.showContents(file.toByteArray, noColor = true, isBestEffortTasty = false))

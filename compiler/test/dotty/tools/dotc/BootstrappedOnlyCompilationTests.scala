@@ -192,8 +192,8 @@ class BootstrappedOnlyCompilationTests {
     // 1. hack with absolute path for -Xplugin
     // 2. copy `pluginFile` to destination
     def compileFilesInDir(dir: String, run: Boolean = false): CompilationTest = {
-      val outDir = defaultOutputDir + "testPlugins/"
-      val sourceDir = new java.io.File(dir)
+      val outDir = new java.io.File(Properties.repoRoot.toFile, defaultOutputDir + "testPlugins")
+      val sourceDir = new java.io.File(Properties.repoRoot.toFile, dir)
 
       val dirs = sourceDir.listFiles.toList.filter(_.isDirectory)
       val targets = dirs.map { dir =>

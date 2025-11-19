@@ -2,6 +2,7 @@ package dotty.tools.vulpix
 
 import scala.language.unsafeNulls
 
+import dotty.Properties
 import scala.io.Source
 import scala.util.Using
 
@@ -28,9 +29,11 @@ object FileDiff {
       if (!(new File(checkFile)).exists) Nil
       else Using(Source.fromFile(checkFile, StandardCharsets.UTF_8.name))(_.getLines().toList).get
 
-    if (!matches(outputLines, checkLines)) Some(
+    val outputLines0 = outputLines.map(_.replace(Properties.repoRoot.toString + "/", ""))
+
+    if (!matches(outputLines0, checkLines)) Some(
       s"""|Output from '$sourceTitle' did not match check file. Actual output:
-          |${outputLines.mkString(EOL)}
+          |${outputLines0.mkString(EOL)}
           |""".stripMargin + "\n")
     else None
   }
