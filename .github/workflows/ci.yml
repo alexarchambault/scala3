@@ -1,0 +1,49 @@
+name: CI
+on:
+  push:
+    branches:
+    - mill-build
+  pull_request:
+
+jobs:
+  bootstrapping-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 17
+    - name: Test
+      run: ./mill -i __.bootstrapping.test
+
+  published-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 17
+    - name: Test
+      run: ./mill -i __.published.test
+
+  pure-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 17
+    - name: Test
+      run: ./mill -i __.pure.test
