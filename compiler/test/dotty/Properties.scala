@@ -24,7 +24,7 @@ object Properties {
     )
 
   /** Are we running on the CI? */
-  val isRunByCI: Boolean = sys.env.isDefinedAt("DOTTY_CI_RUN")
+  val isRunByCI: Boolean = sys.env.isDefinedAt("CI")
 
   val testCache: Path =
     sys.env.get("DOTTY_TEST_CACHE").map(Paths.get(_)).getOrElse {
