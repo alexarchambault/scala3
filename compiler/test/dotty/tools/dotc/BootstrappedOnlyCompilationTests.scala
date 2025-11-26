@@ -23,15 +23,15 @@ class BootstrappedOnlyCompilationTests {
 
   // Positive tests ------------------------------------------------------------
 
-  @Test def posMacros: Unit = {
+  @TestFactory def posMacros = {
     implicit val testGroup: TestGroup = TestGroup("compilePosMacros")
     aggregateTests(
       compileFilesInDir("tests/bench", defaultOptions.without("-Yno-deep-subtypes")),
       compileFilesInDir("tests/pos-macros", defaultOptions.and("-Xcheck-macros")),
-    ).checkCompile()
+    ).dynamicTests(_.checkCompile())
   }
 
-  @Test def posWithCompiler: Unit = {
+  @TestFactory def posWithCompiler = {
     implicit val testGroup: TestGroup = TestGroup("compilePosWithCompiler")
     aggregateTests(
       compileFilesInDir("tests/pos-with-compiler", withCompilerOptions),
@@ -64,10 +64,10 @@ class BootstrappedOnlyCompilationTests {
         ),
         withCompilerOptions
       ),
-    ).checkCompile()
+    ).dynamicTests(_.checkCompile())
   }
 
-  @Test def posTwiceWithCompiler: Unit = {
+  @TestFactory def posTwiceWithCompiler = {
     implicit val testGroup: TestGroup = TestGroup("posTwiceWithCompiler")
     aggregateTests(
       compileFile("tests/pos-with-compiler/Labels.scala", withCompilerOptions),
@@ -89,7 +89,7 @@ class BootstrappedOnlyCompilationTests {
         ),
         withCompilerOptions
       )
-    ).times(2).checkCompile()
+    ).dynamicTests(_.times(2).checkCompile())
   }
 
   // Negative tests ------------------------------------------------------------
@@ -100,12 +100,12 @@ class BootstrappedOnlyCompilationTests {
       .checkExpectedErrors()
   }
 
-  @Test def negWithCompiler: Unit = {
+  @TestFactory def negWithCompiler = {
     implicit val testGroup: TestGroup = TestGroup("compileNegWithCompiler")
     aggregateTests(
       compileFilesInDir("tests/neg-with-compiler", withCompilerOptions),
       compileFilesInDir("tests/neg-staging", withStagingOptions),
-    ).checkExpectedErrors()
+    ).dynamicTests(_.checkExpectedErrors())
   }
 
   // Run tests -----------------------------------------------------------------
@@ -116,7 +116,7 @@ class BootstrappedOnlyCompilationTests {
       .checkRuns()
   }
 
-  @Test def runWithCompiler: Unit = {
+  @TestFactory def runWithCompiler = {
     implicit val testGroup: TestGroup = TestGroup("runWithCompiler")
     val basicTests = List(
       compileFilesInDir("tests/run-with-compiler", withCompilerOptions),
@@ -127,24 +127,24 @@ class BootstrappedOnlyCompilationTests {
       if scala.util.Properties.isWin then basicTests
       else compileDir("tests/old-tasty-interpreter-prototype", withTastyInspectorOptions) :: basicTests
 
-    aggregateTests(tests*).checkRuns()
+    aggregateTests(tests*).dynamicTests(_.checkRuns())
   }
 
-  @Disabled @Test def runScala2LibraryFromTasty: Unit = {
+  @Disabled @TestFactory def runScala2LibraryFromTasty = {
     implicit val testGroup: TestGroup = TestGroup("runScala2LibraryFromTasty")
     // These tests recompile the entire scala2-library from TASTy,
     // they are resource intensive and should not run alongside other tests to avoid timeouts
     aggregateTests(
       compileFile("tests/run-custom-args/scala2-library-from-tasty-jar.scala", withCompilerOptions),
       compileFile("tests/run-custom-args/scala2-library-from-tasty.scala", withCompilerOptions),
-    ).limitThreads(2).checkRuns() // TODO reduce to limitThreads(1) if it still causes problems, this would be around 50% slower based on local benchmarking
+    ).dynamicTests(_.limitThreads(2).checkRuns()) // TODO reduce to limitThreads(1) if it still causes problems, this would be around 50% slower based on local benchmarking
   }
 
-  @Test def runBootstrappedOnly: Unit = {
+  @TestFactory def runBootstrappedOnly = {
     implicit val testGroup: TestGroup = TestGroup("runBootstrappedOnly")
     aggregateTests(
       compileFilesInDir("tests/run-bootstrapped", withCompilerOptions),
-    ).checkRuns()
+    ).dynamicTests(_.checkRuns())
   }
 
   // Pickling Tests ------------------------------------------------------------
@@ -152,7 +152,7 @@ class BootstrappedOnlyCompilationTests {
   // Pickling tests are very memory intensive and as such need to be run with a
   // lower level of concurrency as to not kill their running VMs
 
-  @Test def picklingWithCompiler: Unit = {
+  @TestFactory def picklingWithCompiler = {
     implicit val testGroup: TestGroup = TestGroup("testPicklingWithCompiler")
     // Exclude this file from the test as it contains some changes that require scala 2.13.17
     // This filter can be dropped once we drop the dependency to Scala 2 (in 3.8.0)
@@ -180,7 +180,7 @@ class BootstrappedOnlyCompilationTests {
       compileDir("compiler/src/dotty/tools/dotc/core/tasty", picklingWithCompilerOptions),
       compileDir("compiler/src/dotty/tools/dotc/core/unpickleScala2", picklingWithCompilerOptions),
       compileDir("tasty/src/dotty/tools/tasty", picklingWithCompilerOptions)
-    ).limitThreads(4).checkCompile()
+    ).dynamicTests(_.limitThreads(4).checkCompile())
   }
 
   @Test def testPlugins: Unit = {

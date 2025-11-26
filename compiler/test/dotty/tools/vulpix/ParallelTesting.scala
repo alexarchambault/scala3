@@ -34,6 +34,7 @@ import dotc.config.Config
 import dotc.util.{DiffUtil, SourceFile, SourcePosition, Spans, NoSourcePosition}
 import io.AbstractFile
 import dotty.tools.vulpix.TestConfiguration.defaultOptions
+import org.junit.jupiter.api.DynamicTest
 
 /** A parallel testing suite whose goal is to integrate nicely with JUnit
  *
@@ -1178,6 +1179,28 @@ trait ParallelTesting extends RunnerOrchestration:
       shouldFail: Boolean = shouldFail,
       shouldSuppressOutput: Boolean = shouldSuppressOutput): CompilationTest =
         CompilationTest(targets, times, shouldDelete, threadLimit, shouldFail, shouldSuppressOutput)
+
+    def dynamicTests(run: CompilationTest => Unit): java.util.Collection[DynamicTest] =
+      targets
+        .map { target =>
+          val test0 = copy(List(target))
+          DynamicTest.dynamicTest(
+            target.title,
+            () => run(test0)
+          )
+        }
+        .asJava
+
+    def namedDynamicTests(name: String)(run: CompilationTest => Unit): java.util.Collection[DynamicTest] =
+      targets
+        .map { target =>
+          val test0 = copy(List(target))
+          DynamicTest.dynamicTest(
+            s"$name ${target.title}",
+            () => run(test0)
+          )
+        }
+        .asJava
 
     /** Creates a "pos" test run, which makes sure that all tests pass
      *  compilation without generating errors and that they do not crash the
