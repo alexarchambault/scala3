@@ -5,10 +5,9 @@ package scripting
 import scala.language.unsafeNulls
 
 import java.nio.file.Paths
-import org.junit.{Test, AfterClass}
-import org.junit.Assert.assertEquals
-import org.junit.Assume.assumeFalse
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import dotty.Assumptions._
 
 import vulpix.TestConfiguration
 
@@ -17,7 +16,7 @@ import ScriptTestEnv.*
 /**
  *   +. test scala -e <expression>
  */
-@Category(Array(classOf[BootstrappedOnlyTests]))
+@Tag("BootstrappedOnly")
 class ExpressionTest:
   /*
    * verify -e <expression> works.
@@ -55,7 +54,7 @@ class ExpressionTest:
 
 object ExpressionTest:
 
-  @AfterClass def cleanup(): Unit = {
+  @AfterAll def cleanup(): Unit = {
     cleanupScalaCLIDirs()
   }
 

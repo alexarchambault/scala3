@@ -1,7 +1,7 @@
 package dotty.tools.repl
 
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 class TypeTests extends ReplTest:
   @Test def typeOf1 = initially {

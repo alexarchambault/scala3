@@ -1,42 +1,47 @@
 package dotty.tools.scaladoc
 
 import scala.jdk.CollectionConverters.{ListHasAsScala, SeqHasAsJava}
-import org.junit.{Test, Rule}
-import org.junit.rules.{TemporaryFolder, ErrorCollector}
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
+import java.nio.file.Path
+import scala.collection.mutable.ListBuffer
 
 abstract class ScaladocTest(val name: String):
 
-  def afterRendering(op: DocContext ?=> Unit) =
-    val ctx = Scaladoc.run(args)(using testContext)
+  def afterRendering(tempDir: File)(op: DocContext ?=> Unit) =
+    val ctx = Scaladoc.run(args(tempDir))(using testContext)
     op(using ctx)
 
   def moduleDocContext = testDocContext(tastyFiles(name))
 
-  def withModule(op: DocContext ?=> Module => Unit) =
+  def withModule(tempDir: File)(op: DocContext ?=> Module => Unit) =
     given DocContext = moduleDocContext
     op(ScalaModuleProvider.mkModule())
 
-  protected def getTempDir() : TemporaryFolder =
-    val folder = new TemporaryFolder()
-    folder.create()
-    folder
-
-  def args = Scaladoc.Args(
+  def args(tempDir: File) = Scaladoc.Args(
       name = "test",
       tastyFiles = tastyFiles(name),
-      output = getTempDir().getRoot,
+      output = tempDir,
       projectVersion = Some("1.0"),
       sourceLinks = List("github://scala/scala3/master")
     )
 
   @Test
-  def runTest: Unit
+  final def runTest0(@TempDir tempDir: Path): Unit = {
+    try runTest(tempDir.toFile)
+    finally
+      if (errors.nonEmpty)
+        for (err <- errors)
+          System.err.println(s"Error: $err")
+    if (errors.nonEmpty)
+      sys.error("Some errors were found")
+  }
 
+  def runTest(tempDir: File): Unit
 
-  @Rule
-  def collector = _collector
-  private val _collector = new ErrorCollector();
-  def reportError(msg: String) = collector.addError(new AssertionError(msg))
+  private var errors = new ListBuffer[String]
+  def reportError(msg: String) =
+    errors += msg
 
 

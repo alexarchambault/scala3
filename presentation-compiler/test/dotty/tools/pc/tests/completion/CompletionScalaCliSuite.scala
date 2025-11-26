@@ -2,8 +2,8 @@ package dotty.tools.pc.tests.completion
 
 import dotty.tools.pc.base.BaseCompletionSuite
 
-import org.junit.Test
-import org.junit.Ignore
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Disabled
 
 class CompletionScalaCliSuite extends BaseCompletionSuite:
 
@@ -46,7 +46,7 @@ class CompletionScalaCliSuite extends BaseCompletionSuite:
          |""".stripMargin
     )
 
-  @Ignore
+  @Disabled
   @Test def `single-colon` =
     checkSubset(
       """|//> using lib "io.circe:circe-core_na@@
@@ -78,7 +78,7 @@ class CompletionScalaCliSuite extends BaseCompletionSuite:
       filter = _.endsWith("0.14.10")
     )
 
-  @Ignore
+  @Disabled
   @Test def `multiple-libs` =
     checkSubset(
       """|//> using lib "io.circe::circe-core:0.14.0", "io.circe::circe-core_na@@"
@@ -87,7 +87,7 @@ class CompletionScalaCliSuite extends BaseCompletionSuite:
       "circe-core_native0.4"
     )
 
-  @Ignore
+  @Disabled
   @Test def `script` =
     checkSubset(
       scriptWrapper(
@@ -140,7 +140,7 @@ class CompletionScalaCliSuite extends BaseCompletionSuite:
          |io.circul""".stripMargin
     )
 
-  @Ignore
+  @Disabled
   @Test def `multiple-deps2` =
     checkSubset(
       """|//> using libs "io.circe::circe-core:0.14.0", "io.circe::circe-core_na@@"

@@ -161,7 +161,7 @@ As a worked example let's create a test case to verify the structure of `Box#X` 
 import dotty.tools.dotc.core.Contexts.Context
 import dotty.tools.dotc.core.Types.*
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 import dotty.tools.DottyTypeStealer, DottyTypeStealer.Kind
 

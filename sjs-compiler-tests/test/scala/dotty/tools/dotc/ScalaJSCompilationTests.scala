@@ -2,15 +2,14 @@ package dotty
 package tools
 package dotc
 
-import org.junit.{ Test, BeforeClass, AfterClass }
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.*
 
 import scala.concurrent.duration._
 import reporting.TestReporter
 import vulpix._
-import org.junit.Ignore
+import org.junit.jupiter.api.Disabled
 
-@Category(Array(classOf[ScalaJSCompilationTests]))
+@Tag("ScalaJSCompilation")
 class ScalaJSCompilationTests {
   import ParallelTesting._
   import TestConfiguration._
@@ -46,7 +45,7 @@ object ScalaJSCompilationTests extends ParallelTesting {
   def updateCheckFiles: Boolean = Properties.testsUpdateCheckfile
   def failedTests = TestReporter.lastRunFailedTests
 
-  @AfterClass def tearDown(): Unit =
+  @AfterAll def tearDown(): Unit =
     cleanup()
     summaryReport.echoSummary()
 

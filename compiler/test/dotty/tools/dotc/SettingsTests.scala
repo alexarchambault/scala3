@@ -15,8 +15,8 @@ import dotty.tools.dotc.config.ScalaVersion
 
 import java.nio.file._
 
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import dotty.Assertions._
 import scala.util.Using
 
 class SettingsTests {

@@ -3,7 +3,7 @@ package dotty.tools.dotc.core
 import dotty.tools.dotc.core.NameOps.isOperatorName
 import dotty.tools.dotc.core.Names.{termName, SimpleName}
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class NameOpsTest:
   @Test def isOperatorNamePos: Unit =

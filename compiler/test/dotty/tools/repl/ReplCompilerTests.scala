@@ -4,9 +4,9 @@ import scala.language.unsafeNulls
 
 import java.util.regex.Pattern
 
-import org.junit.Assert.{assertEquals, assertFalse, assertTrue}
-import org.junit.Assert.{assertTrue => assert}
-import org.junit.Test
+import dotty.Assertions.{assertEquals, assertFalse, assertTrue}
+import dotty.Assertions.{assertTrue => assert}
+import org.junit.jupiter.api.Test
 import dotty.tools.dotc.core.Contexts.Context
 
 class ReplCompilerTests extends ReplTest:

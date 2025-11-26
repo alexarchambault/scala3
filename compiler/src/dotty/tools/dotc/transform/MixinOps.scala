@@ -15,8 +15,8 @@ class MixinOps(cls: ClassSymbol, thisPhase: DenotTransformer)(using Context) {
   val superCls: Symbol = cls.superClass
   val mixins: List[ClassSymbol] = cls.mixins
 
-  lazy val JUnit4Annotations: List[Symbol] = List("Test", "Ignore", "Before", "After", "BeforeClass", "AfterClass").
-    map(n => getClassIfDefined("org.junit." + n)).
+  lazy val JUnit4Annotations: List[Symbol] = List("Test", "Disabled", "BeforeEach", "AfterEach", "BeforeAll", "AfterAll").
+    map(n => getClassIfDefined("org.junit.jupiter.api" + n)).
     filter(_.exists)
 
   def mkForwarderSym(member: TermSymbol, extraFlags: FlagSet = EmptyFlags): TermSymbol = {

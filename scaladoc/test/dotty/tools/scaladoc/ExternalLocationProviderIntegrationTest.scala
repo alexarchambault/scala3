@@ -4,6 +4,7 @@ import scala.io.Source
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 import dotty.tools.scaladoc.test.BuildInfo
+import java.io.File
 import java.nio.file.Path;
 import org.jsoup.Jsoup
 import util.IO
@@ -81,14 +82,14 @@ abstract class ExternalLocationProviderIntegrationTest(
   expectedLinks: Seq[String]
   ) extends ScaladocTest(name):
 
-  override def args = super.args.copy(
+  override def args(tempDir: File) = super.args(tempDir).copy(
     externalMappings = mappings.flatMap( s =>
           ExternalDocLink.parse(s).fold(left => None, right => Some(right)
         )
       ).toList
   )
 
-  override def runTest = afterRendering {
+  override def runTest(tempDir: File) = afterRendering(tempDir) {
     val output = summon[DocContext].args.output.toPath
     val linksBuilder = List.newBuilder[String]
 
@@ -120,7 +121,7 @@ abstract class LegacyExternalLocationProviderIntegrationTest(
   expectedLinks: Seq[String]
 ) extends ExternalLocationProviderIntegrationTest(name, mappings, expectedLinks):
 
-  override def args = super.args.copy(
+  override def args(tempDir: File) = super.args(tempDir).copy(
       externalMappings = mappings.flatMap( s =>
         ExternalDocLink.parseLegacy(s).fold(left => None, right => Some(right)
       )

@@ -1,6 +1,6 @@
 package hello
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 // Import Expr and some extension methods
 import scala.quoted._

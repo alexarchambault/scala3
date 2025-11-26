@@ -7,12 +7,12 @@ import scala.language.unsafeNulls
 import java.io.File
 import java.nio.file.Path
 
-import org.junit.{Test, Ignore, AfterClass}
+import org.junit.jupiter.api.*
 import vulpix.TestConfiguration
 import ScriptTestEnv.*
 
 object ClasspathTests:
-  @AfterClass def cleanup: Unit = {
+  @AfterAll def cleanup: Unit = {
     cleanupScalaCLIDirs()
   }
 
@@ -25,7 +25,7 @@ class ClasspathTests:
    * System property "java.class.path" does not necessarily contain the actual runtime path,
    * So this test can fail even when the classpath is correct.
    */
-  @Ignore
+  @Disabled
   @Test def hashbangClasspathVerifyTest = {
     // only interested in classpath test scripts
     val testScriptName = "classpathReport_scalacli.sc"
@@ -81,7 +81,7 @@ class ClasspathTests:
   /*
    * verify classpath is unglobbed by MainGenericRunner.
    */
-  @Ignore
+  @Disabled
   @Test def unglobClasspathVerifyTest = {
     val testScriptName = "unglobClasspath_scalacli.sc"
     val testScript = scripts("/scripting").find { _.name.matches(testScriptName) } match

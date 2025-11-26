@@ -2,7 +2,7 @@ package dotty.tools.pc.tests.completion
 
 import dotty.tools.pc.base.BaseCompletionSuite
 import scala.meta.pc.CompletionItemPriority
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class CompletionContextSuite extends BaseCompletionSuite:
   override val completionItemPriority: CompletionItemPriority = {

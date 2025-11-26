@@ -2,7 +2,7 @@ package dotty.tools.dotc.classpath
 
 import scala.language.unsafeNulls
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.nio.file._
 import java.nio.file.attribute.FileTime
 

@@ -3,8 +3,9 @@ package xsbt
 import xsbti.api._
 import xsbt.api.SameAPI
 
-import org.junit.{ Test, Ignore }
-import org.junit.Assert._
+import org.junit.Ignore
+import org.junit.jupiter.api.Assertions._
+import org.junit.jupiter.api.Test
 
 class ExtractAPISpecification {
 
@@ -30,7 +31,7 @@ class ExtractAPISpecification {
     assertFalse(SameAPI(fooClassApi1, fooClassApi2))
   }
 
-  @Ignore
+  @Disabled
   def extractDefinitionTypeOfPackageObject = {
     val src = "package object foo".stripMargin
     val compilerForTesting = new ScalaCompilerForUnitTesting
@@ -62,7 +63,7 @@ class ExtractAPISpecification {
     assertEquals(Set("A", "B", "C", "D"), apis.keys)
   }
 
-  @Ignore
+  @Disabled
   def extractFlatApiOfNestedClass = {
     def compileAndGetFooClassApi(src: String): ClassLike = {
       val compilerForTesting = new ScalaCompilerForUnitTesting
@@ -129,7 +130,7 @@ class ExtractAPISpecification {
    * is compiled together with Namers or Namers is compiled first and then Global refers
    * to Namers by unpickling types from class files.
    */
-  @Ignore
+  @Disabled
   def extractStableRepresentationOfSelfVariableThatHasNoSelfType = {
     def selectNamer(apis: Seq[ClassLike]): ClassLike = {
       // TODO: this doesn't work yet because inherited classes are not extracted
@@ -148,13 +149,13 @@ class ExtractAPISpecification {
     val compilerForTesting = new ScalaCompilerForUnitTesting
     val apis =
       compilerForTesting.extractApisFromSrcs(List(src1, src2), List(src2))
-    val _ :: src2Api1 :: src2Api2 :: Nil = apis.toList: @unchecked 
+    val _ :: src2Api1 :: src2Api2 :: Nil = apis.toList: @unchecked
     val namerApi1 = selectNamer(src2Api1)
     val namerApi2 = selectNamer(src2Api2)
     assertTrue(SameAPI(namerApi1, namerApi2))
   }
 
-  @Ignore
+  @Disabled
   def extractDifferentRepresentationForAnInheritedClass = {
     val src =
       """|class A[T] {
@@ -187,7 +188,7 @@ class ExtractAPISpecification {
    * Checks if self type is properly extracted in various cases of declaring a self type
    * with or without a self variable.
    */
-  @Ignore
+  @Disabled
   def representASelfTypeCorrectly = {
     val srcX = "trait X"
     val srcY = "trait Y"

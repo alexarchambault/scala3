@@ -4,7 +4,7 @@ import java.nio.file.Path
 
 import dotty.tools.pc.base.{BaseCompletionSuite, BaseExtractMethodSuite}
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ExtractMethodNoIndentSuite extends BaseExtractMethodSuite:
   override protected def scalacOptions(classpath: Seq[Path]): Seq[String] =

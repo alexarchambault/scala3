@@ -7,8 +7,8 @@ package org.scalajs.testsuite.compiler
 
 import scala.reflect.Selectable.reflectiveSelectable
 
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 object ReflectiveCallTestScala3 {
   class C { type S = String; type I }

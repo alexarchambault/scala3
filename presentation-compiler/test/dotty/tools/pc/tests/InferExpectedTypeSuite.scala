@@ -8,8 +8,8 @@ import scala.meta.internal.metals.EmptyCancelToken
 import dotty.tools.pc.ScalaPresentationCompiler
 import scala.meta.internal.mtags.CommonMtagsEnrichments.*
 
-import org.junit.Test
-import org.junit.Ignore
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Disabled
 
 class InferExpectedTypeSuite extends BasePCSuite:
   def check(

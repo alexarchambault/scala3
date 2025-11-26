@@ -1,7 +1,8 @@
 package dotty.tools.scaladoc
 
-import org.junit.{Test, Assert}
-import org.junit.Assert._
+import org.junit.Assert
+import org.junit.jupiter.api.Assertions._
+import org.junit.jupiter.api.Test
 
 class QueryParserTest:
   val queryParser = QueryParser()

@@ -5,7 +5,7 @@ package reporting
 import scala.language.unsafeNulls
 
 import core.Contexts.Context
-import org.junit.Assert._
+import dotty.Assertions._
 
 trait ErrorMessagesTest extends DottyTest {
 

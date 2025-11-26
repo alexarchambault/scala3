@@ -5,8 +5,7 @@ import dotty.Properties
 import dotty.tools.dotc.reporting.TestReporter
 import dotty.tools.io.JFile
 import dotty.tools.vulpix.*
-import org.junit.AfterClass
-import org.junit.Test
+import org.junit.jupiter.api.{Timeout => _, *}
 
 import java.util.concurrent.TimeoutException
 import scala.concurrent.duration.*
@@ -34,7 +33,7 @@ object DebugTests extends ParallelTesting:
   override def debugMode = true
 
   implicit val summaryReport: SummaryReporting = new SummaryReport
-  @AfterClass def tearDown(): Unit =
+  @AfterAll def tearDown(): Unit =
     super.cleanup()
     summaryReport.echoSummary()
 

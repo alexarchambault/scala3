@@ -2,8 +2,8 @@ package dotty.tools
 
 import vulpix.TestConfiguration
 
-import org.junit.Assert._
-import org.junit.Test
+import dotty.Assertions._
+import org.junit.jupiter.api.Test
 
 import dotc.ast.untpd
 import dotc.core.Decorators._
@@ -100,7 +100,7 @@ class SignatureTest:
         // Both NamedType and MethodOrPoly cache signatures, so check both caches.
         assertEquals(i"Check failed for param signature of ${ref.info} (but not for $ref itself)",
           expectedParamSig, ref.info.signature.paramsSig.head)
-        
+
 
       // Initially, the param signature is Uninstantiated since it depends on an uninstantiated type variable
       checkParamSig(ref, tpnme.Uninstantiated)

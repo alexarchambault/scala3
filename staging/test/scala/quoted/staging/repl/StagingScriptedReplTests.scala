@@ -4,13 +4,12 @@ import dotty.BootstrappedOnlyTests
 import dotty.tools.scripts
 import dotty.tools.repl.ReplTest
 import dotty.tools.vulpix.TestConfiguration
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.Test
 
 /** Runs all tests contained in `staging/test-resources/repl-staging` */
 class StagingScriptedReplTests extends ReplTest(ReplTest.withStagingOptions) {
 
-  @Category(Array(classOf[BootstrappedOnlyTests]))
+  @Tag("BootstrappedOnly")
   @Test def replStagingTests = scripts("/repl-staging").foreach(testFile)
 
 }

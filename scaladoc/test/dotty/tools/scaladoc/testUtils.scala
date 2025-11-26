@@ -5,7 +5,7 @@ import dotty.tools.dotc.reporting.Diagnostic
 import dotty.tools.dotc.reporting.ConsoleReporter
 import dotty.tools.dotc.interfaces.Diagnostic.{ERROR, INFO, WARNING}
 import dotty.tools.scaladoc.test.BuildInfo
-import org.junit.Assert._
+import dotty.Assertions._
 import java.io.File
 import java.nio.file.Paths
 

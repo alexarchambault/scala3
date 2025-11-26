@@ -3,10 +3,11 @@ package diagram
 
 import dotty.tools.scaladoc.ScaladocTest
 import scala.jdk.CollectionConverters.{ListHasAsScala, SeqHasAsJava}
-import org.junit.Assert.{assertSame, assertTrue, assertEquals}
+import org.junit.jupiter.api.Assertions.{assertSame, assertTrue, assertEquals}
+import java.io.File
 
 class SealedHierarchyTest extends ScaladocTest("sealedClasses"):
-  override def runTest = withModule(_.visitMembers(checkMember))
+  override def runTest(tempDir: File) = withModule(tempDir)(_.visitMembers(checkMember))
 
   def checkMember(x: Member) = x.name match
     case "A" =>

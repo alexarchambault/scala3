@@ -5,7 +5,7 @@ import dotty.tools.languageserver.util.{CodeRange, PositionContext}
 
 import org.eclipse.lsp4j.Location
 
-import org.junit.Assert.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 
 import scala.jdk.CollectionConverters._
 

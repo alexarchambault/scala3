@@ -1,8 +1,8 @@
 package dotty.tools
 package backend.jvm
 
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions._
 
 import scala.tools.asm.Opcodes._
 

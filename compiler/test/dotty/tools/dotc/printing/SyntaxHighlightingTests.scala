@@ -3,8 +3,8 @@ package dotty.tools.dotc.printing
 import scala.language.unsafeNulls
 
 import dotty.tools.DottyTest
-import org.junit.Assert._
-import org.junit.{Ignore, Test}
+import org.junit.jupiter.api.Assertions._
+import org.junit.jupiter.api._
 
 /** Adapted from Ammonite HighlightTests
  */
@@ -124,7 +124,7 @@ class SyntaxHighlightingTests extends DottyTest {
   }
 
   @Test
-  @Ignore("TODO: Not implemented")
+  @Disabled("TODO: Not implemented")
   def patterns = {
     test("val Foo(x) = foo", ???)
     test("val foo @ Foo(x) = bar", ???)

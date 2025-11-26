@@ -4,7 +4,7 @@ import dotty.tools.languageserver.util.embedded.CodeMarker
 import dotty.tools.languageserver.util.{CodeRange, PositionContext}
 import dotty.tools.languageserver.DottyLanguageServer.{RENAME_OVERRIDDEN, RENAME_NO_OVERRIDDEN}
 
-import org.junit.Assert.{assertEquals, assertNull, fail}
+import org.junit.jupiter.api.Assertions.{assertEquals, assertNull, fail}
 
 import org.eclipse.lsp4j.{MessageActionItem, ShowMessageRequestParams}
 

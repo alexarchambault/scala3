@@ -4,10 +4,9 @@ package dotc
 
 import scala.language.unsafeNulls
 
-import org.junit.{ Test, BeforeClass, AfterClass, Ignore }
-import org.junit.Assert._
-import org.junit.Assume._
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions._
+import dotty.Assumptions._
 
 import java.io.File
 import java.nio.file._
@@ -388,7 +387,7 @@ object CompilationTests extends ParallelTesting {
   def failedTests = TestReporter.lastRunFailedTests
 
   implicit val summaryReport: SummaryReporting = new SummaryReport
-  @AfterClass def tearDown(): Unit = {
+  @AfterAll def tearDown(): Unit = {
     super.cleanup()
     summaryReport.echoSummary()
   }

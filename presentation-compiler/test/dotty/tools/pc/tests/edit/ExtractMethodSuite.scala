@@ -2,7 +2,7 @@ package dotty.tools.pc.tests.edit
 
 import dotty.tools.pc.base.BaseExtractMethodSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ExtractMethodSuite extends BaseExtractMethodSuite:
   @Test def `simple-expr` =

@@ -1,7 +1,7 @@
 package org.scalajs.testsuite.jsinterop
 
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*

@@ -1,10 +1,8 @@
 package dotty.tools.dotc.coverage
 
-import org.junit.Test
-import org.junit.AfterClass
-import org.junit.Assert.*
-import org.junit.Assume.*
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.*
+import dotty.Assumptions._
 import dotty.{BootstrappedOnlyTests, Properties}
 import dotty.tools.vulpix.*
 import dotty.tools.vulpix.TestConfiguration.*
@@ -20,7 +18,7 @@ import dotty.tools.dotc.util.DiffUtil
 
 import java.util.stream.Collectors
 
-@Category(Array(classOf[BootstrappedOnlyTests]))
+@Tag("BootstrappedOnly")
 class CoverageTests:
   import CoverageTests.{*, given}
 
@@ -141,7 +139,7 @@ object CoverageTests extends ParallelTesting:
   def failedTests = TestReporter.lastRunFailedTests
 
   given summaryReport: SummaryReporting = SummaryReport()
-  @AfterClass def tearDown(): Unit =
+  @AfterAll def tearDown(): Unit =
     super.cleanup()
     summaryReport.echoSummary()
 

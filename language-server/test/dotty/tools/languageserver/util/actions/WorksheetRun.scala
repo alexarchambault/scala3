@@ -5,7 +5,7 @@ import dotty.tools.languageserver.util.embedded.CodeMarker
 
 import java.util.concurrent.TimeUnit
 
-import org.junit.Assert.{assertEquals, assertTrue, fail}
+import org.junit.jupiter.api.Assertions.{assertEquals, assertTrue, fail}
 
 class WorksheetRun(marker: CodeMarker, expected: Seq[(CodeRange, String)], strict: Boolean) extends WorksheetAction {
 

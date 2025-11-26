@@ -13,7 +13,7 @@ import dotty.tools.pc.base.BaseCodeActionSuite
 import dotty.tools.pc.utils.TextEdits
 
 import org.eclipse.lsp4j as l
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class InlineValueSuite extends BaseCodeActionSuite with CommonMtagsEnrichments:
 

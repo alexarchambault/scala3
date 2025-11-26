@@ -10,8 +10,8 @@ import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.*
 import scala.runtime.Scala3RunTime.assertFailed
 
-import org.junit.Assert._
-import org.junit.Test
+import org.junit.jupiter.api.Assertions._
+import org.junit.jupiter.api.Test
 
 /** This is a test suite that is meant to test the actions attached to the
   * diagnostic for a given code snippet.
@@ -314,11 +314,11 @@ class CodeActionTest extends DottyTest:
     val source = SourceFile.virtual("test", code).content
     val runCtx = checkCompile(afterPhase, code) { (_, _) => () }
     val diagnostics = runCtx.reporter.removeBufferedMessages
-    assertEquals("Expected exactly one diagnostic", 1, diagnostics.size)
+    assertEquals(1, diagnostics.size, "Expected exactly one diagnostic")
 
     val diagnostic = diagnostics.head
     val actions = diagnostic.msg.actions.toList
-    assertEquals("Expected exactly one action", 1, actions.size)
+    assertEquals(1, actions.size, "Expected exactly one action")
 
     // TODO account for more than 1 action
     val action = actions.head

@@ -2,7 +2,7 @@ package dotty.tools.io
 
 import scala.language.unsafeNulls
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 import dotty.tools.io.AbstractFile
 import java.nio.file.Files._

@@ -2,8 +2,8 @@ package org.scalajs.testsuite.jsinterop
 
 import scala.language.dynamics
 
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*

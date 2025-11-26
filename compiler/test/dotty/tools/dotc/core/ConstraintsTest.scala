@@ -10,7 +10,7 @@ import dotty.tools.dotc.core.Types.*
 import dotty.tools.dotc.ast.tpd.*
 import dotty.tools.dotc.typer.ProtoTypes.constrained
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 import dotty.tools.DottyTest
 

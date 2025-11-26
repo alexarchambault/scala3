@@ -4,8 +4,8 @@ package config
 import CommandLineParser.tokenize
 import Settings._
 import dotty.tools.dotc.config.ScalaSettingCategories._
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions._
 import core.Decorators.toMessage
 import dotty.tools.io.{Path, PlainFile}
 
@@ -26,9 +26,9 @@ class ScalaSettingsTests:
     val res  = settings.processArguments(summary, processAll = true, skipped = Nil)
     val classpath = settings.classpath.valueIn(res.sstate)
     assertEquals(2, args.length)
-    assertTrue(s"found warnings: ${res.warnings}", res.warnings.isEmpty)
-    assertTrue(s"found errors: ${res.errors}", res.errors.isEmpty)
-    assertTrue("wrong classpath", classpath == "path/to/classes1:other/path/to/classes2")
+    assertTrue(res.warnings.isEmpty, s"found warnings: ${res.warnings}")
+    assertTrue(res.errors.isEmpty, s"found errors: ${res.errors}")
+    assertTrue(classpath == "path/to/classes1:other/path/to/classes2", "wrong classpath")
 
   @Test def `A multistring setting is multivalued`: Unit =
     class SUT extends SettingGroup:
@@ -39,10 +39,10 @@ class ScalaSettingsTests:
     val res  = sut.processArguments(sumy, processAll = true, skipped = Nil)
     val set  = sut.language.valueIn(res.sstate)
     assertEquals(1, args.length)
-    assertTrue("No warnings!", res.warnings.isEmpty)
-    assertTrue("No errors!", res.errors.isEmpty)
-    assertTrue("Has the feature", set.contains("implicitConversions"))
-    assertTrue("Has the feature", set.contains("dynamics"))
+    assertTrue(res.warnings.isEmpty, "No warnings!")
+    assertTrue(res.errors.isEmpty, "No errors!")
+    assertTrue(set.contains("implicitConversions"), "Has the feature")
+    assertTrue(set.contains("dynamics"), "Has the feature")
 
   @Test def `t9719 Apply -language more than once`: Unit =
     class SUT extends SettingGroup:
@@ -53,10 +53,10 @@ class ScalaSettingsTests:
     val res  = sut.processArguments(sumy, processAll = true, skipped = Nil)
     val set  = sut.language.valueIn(res.sstate)
     assertEquals(2, args.length)
-    assertTrue("No warnings!", res.warnings.isEmpty)
-    assertTrue("No errors!", res.errors.isEmpty)
-    assertTrue("Has the feature", set.contains("implicitConversions"))
-    assertTrue("Has the feature", set.contains("dynamics"))
+    assertTrue(res.warnings.isEmpty, "No warnings!")
+    assertTrue(res.errors.isEmpty, "No errors!")
+    assertTrue(set.contains("implicitConversions"), "Has the feature")
+    assertTrue(set.contains("dynamics"), "Has the feature")
 
   @Test def `Warn if multistring element is supplied multiply`: Unit =
     class SUT extends SettingGroup:
@@ -67,10 +67,10 @@ class ScalaSettingsTests:
     val res  = sut.processArguments(sumy, processAll = true, skipped = Nil)
     val set  = sut.language.valueIn(res.sstate)
     assertEquals(3, args.length)
-    assertEquals("Must warn", 1, res.warnings.length)
-    assertTrue("No errors!", res.errors.isEmpty)
-    assertTrue("Has the feature", set.contains("implicitConversions"))
-    assertTrue("Has the feature", set.contains("dynamics"))
+    assertEquals(1, res.warnings.length, "Must warn")
+    assertTrue(res.errors.isEmpty, "No errors!")
+    assertTrue(set.contains("implicitConversions"), "Has the feature")
+    assertTrue(set.contains("dynamics"), "Has the feature")
 
   @Test def `WConf setting is parsed`: Unit =
     import reporting.{Action, Diagnostic, NoExplanation}

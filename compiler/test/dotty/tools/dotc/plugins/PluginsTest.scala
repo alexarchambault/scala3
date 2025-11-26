@@ -2,7 +2,7 @@ package dotty.tools.dotc.plugins
 
 import scala.language.unsafeNulls
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 import dotty.tools.dotc._
 import plugins._

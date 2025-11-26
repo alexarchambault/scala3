@@ -4,7 +4,7 @@ import dotty.tools.DottyTest
 import dotty.tools.dotc.core.Contexts.Context
 import dotty.tools.dotc.core.Types.TypeBounds
 import dotty.tools.dotc.typer.ProtoTypes.newTypeVar
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class SubtypingInvariantTests extends DottyTest {
 

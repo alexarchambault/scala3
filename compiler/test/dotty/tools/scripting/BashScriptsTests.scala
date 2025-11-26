@@ -5,10 +5,9 @@ package scripting
 import scala.language.unsafeNulls
 
 import java.nio.file.Paths
-import org.junit.{Test, Ignore, AfterClass}
-import org.junit.Assert.assertEquals
-import org.junit.Assume.assumeFalse
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import dotty.Assumptions._
 
 import vulpix.TestConfiguration
 
@@ -24,7 +23,7 @@ object BashScriptsTests:
   lazy val argsfile = createArgsFile() // avoid problems caused by drive letter
   def testFiles = scripts("/scripting")
 
-  @AfterClass def cleanup: Unit = {
+  @AfterAll def cleanup: Unit = {
     cleanupScalaCLIDirs()
 
     val af = argsfile.toFile
@@ -81,7 +80,7 @@ object BashScriptsTests:
     stdout.mkString("\n")
 
 
-@Ignore
+@Disabled
 class BashScriptsTests:
   import BashScriptsTests.*
   // classpath tests managed by scripting.ClasspathTests.scala
@@ -89,7 +88,7 @@ class BashScriptsTests:
   ////////////////////////// begin tests //////////////////////
 
   /* verify that `dist/bin/scala` correctly passes args to the jvm via -J-D for script envtest.sc */
-  @Ignore // SCALA CLI does not support `-J` to pass java properties, only things like -Xmx5g
+  @Disabled // SCALA CLI does not support `-J` to pass java properties, only things like -Xmx5g
   @Test def verifyScJProperty =
     assumeFalse("Scripts do not yet support Scala 2 library TASTy", Properties.usingScalaLibraryTasty)
     val tag = "World1"
@@ -97,7 +96,7 @@ class BashScriptsTests:
     assertEquals( s"Hello $tag", stdout)
 
   /* verify that `dist/bin/scala` correctly passes args to the jvm via -J-D for script envtest.scala */
-  @Ignore // SCALA CLI does not support `-J` to pass java properties, only things like -Xmx5g
+  @Disabled // SCALA CLI does not support `-J` to pass java properties, only things like -Xmx5g
   @Test def verifyScalaJProperty =
     assumeFalse("Scripts do not yet support Scala 2 library TASTy", Properties.usingScalaLibraryTasty)
     val tag = "World2"
@@ -179,7 +178,7 @@ class BashScriptsTests:
    * verify that scriptPath_scalacli.sc sees a valid script.path property,
    * and that it's value is the path to "scriptPath_scalacli.sc".
    */
-  @Category(Array(classOf[BootstrappedOnlyTests]))
+  @Tag("BootstrappedOnly")
   @Test def verifyScriptPathProperty =
     assumeFalse("Scripts do not yet support Scala 2 library TASTy", Properties.usingScalaLibraryTasty)
     val scriptFile = testFiles.find(_.getName == "scriptPath_scalacli.sc").get

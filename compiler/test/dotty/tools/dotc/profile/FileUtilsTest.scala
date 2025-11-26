@@ -2,8 +2,8 @@ package dotty.tools.dotc.profile
 
 import java.io.*
 
-import org.junit.Assert.*
-import org.junit.*
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.*
 
 class FileUtilsTest {
 
@@ -50,7 +50,7 @@ class FileUtilsTest {
     fileExpected.delete()
   }
 
-  @Ignore
+  @Disabled
   @Test def showPerformance(): Unit = {
     //warmup
     for (i <- 1 to 1000) {

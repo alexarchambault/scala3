@@ -4,8 +4,8 @@ import dotty.tools.DottyTest
 import dotty.tools.dotc.ast.Trees._
 import dotty.tools.dotc.util.Property
 
-import org.junit.Test
-import org.junit.Assert.{assertEquals, assertTrue, fail}
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.{assertEquals, assertTrue, fail}
 
 class AttachmentsTests extends DottyTest {
 
@@ -17,15 +17,15 @@ class AttachmentsTests extends DottyTest {
   def attachmentsAreNotCopiedOver: Unit = {
     checkCompile("typer", "class A") {
       case (PackageDef(_, (clazz: tpd.TypeDef) :: Nil), context) =>
-        assertTrue("Attachment shouldn't be present", clazz.getAttachment(TestKey).isEmpty)
+        assertTrue(clazz.getAttachment(TestKey).isEmpty, "Attachment shouldn't be present")
 
         val msg = "hello"
         clazz.putAttachment(TestKey, msg)
         assertEquals(Some(msg), clazz.getAttachment(TestKey))
 
         val copy = tpd.cpy.TypeDef(clazz)(rhs = tpd.EmptyTree)
-        assertTrue("A copy should have been returned", clazz ne copy)
-        assertTrue("Attachment shouldn't be present", copy.getAttachment(TestKey).isEmpty)
+        assertTrue(clazz ne copy, "A copy should have been returned")
+        assertTrue(copy.getAttachment(TestKey).isEmpty, "Attachment shouldn't be present")
 
       case _ =>
         fail
@@ -36,9 +36,9 @@ class AttachmentsTests extends DottyTest {
   def stickyAttachmentsAreCopiedOver: Unit = {
     checkCompile("typer", "class A") {
       case (PackageDef(_, (clazz: tpd.TypeDef) :: Nil), context) =>
-        assertTrue("Attachment shouldn't be present", clazz.getAttachment(StickyTestKey).isEmpty)
-        assertTrue("Attachment shouldn't be present", clazz.getAttachment(StickyTestKey2).isEmpty)
-        assertTrue("Attachment shouldn't be present", clazz.getAttachment(TestKey).isEmpty)
+        assertTrue(clazz.getAttachment(StickyTestKey).isEmpty, "Attachment shouldn't be present")
+        assertTrue(clazz.getAttachment(StickyTestKey2).isEmpty, "Attachment shouldn't be present")
+        assertTrue(clazz.getAttachment(TestKey).isEmpty, "Attachment shouldn't be present")
 
         val msg = "hello"
         clazz.putAttachment(StickyTestKey, msg)
@@ -49,10 +49,10 @@ class AttachmentsTests extends DottyTest {
         assertEquals(Some(msg), clazz.getAttachment(StickyTestKey))
 
         val copy = tpd.cpy.TypeDef(clazz)(rhs = tpd.EmptyTree)
-        assertTrue("A copy should have been returned", clazz ne copy)
-        assertTrue("Attachment should be present", copy.hasAttachment(StickyTestKey))
-        assertTrue("Attachment shouldn't be present", !copy.hasAttachment(TestKey))
-        assertTrue("Attachment should be present", copy.hasAttachment(StickyTestKey2))
+        assertTrue(clazz ne copy, "A copy should have been returned")
+        assertTrue(copy.hasAttachment(StickyTestKey), "Attachment should be present")
+        assertTrue(!copy.hasAttachment(TestKey), "Attachment shouldn't be present")
+        assertTrue(copy.hasAttachment(StickyTestKey2), "Attachment should be present")
 
       case _ =>
         fail

@@ -1,7 +1,7 @@
 package dotty.tools.languageserver
 
-import org.junit.Assert.{assertEquals, assertTrue, assertFalse}
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.{assertEquals, assertTrue, assertFalse}
+import org.junit.jupiter.api.Test
 import org.eclipse.lsp4j.CompletionItemKind._
 
 import dotty.tools.languageserver.util.Code._

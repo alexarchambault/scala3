@@ -2,7 +2,7 @@ package a
 
 import a.A
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class Hello {
 

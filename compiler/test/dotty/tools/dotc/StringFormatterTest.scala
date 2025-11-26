@@ -5,8 +5,8 @@ import core.*, Contexts.*, Decorators.*, Denotations.*, Flags.*, Names.*, StdNam
 import config.Printers.*
 import printing.Formatting.Show
 
-import org.junit.Test
-import org.junit.Assert.*
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.*
 
 class StringFormatterTest extends AbstractStringFormatterTest:
   @Test def string     = check("foo", i"${"foo"}")

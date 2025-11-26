@@ -8,7 +8,7 @@ import dotty.tools.dotc.reporting.ErrorMessageID
 import dotty.tools.dotc.util.Signatures.Signature
 
 import org.eclipse.lsp4j.{ CompletionItem, CompletionItemKind, DocumentHighlightKind, Diagnostic, DiagnosticSeverity }
-import org.junit.Assert.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 
 
 /**

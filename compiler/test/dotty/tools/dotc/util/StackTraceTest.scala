@@ -6,8 +6,8 @@ import scala.language.unsafeNulls
 import scala.util.{Failure, Success, Try}
 import scala.util.chaining.given
 
-import org.junit.Assert.{assertEquals, assertTrue}
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.{assertEquals, assertTrue}
+import org.junit.jupiter.api.Test
 
 class StackTraceTest:
   val CausedBy   = "Caused by: "

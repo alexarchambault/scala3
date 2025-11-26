@@ -4,10 +4,8 @@ package dotc
 
 import scala.language.unsafeNulls
 
-import org.junit.{ Test, Ignore, BeforeClass, AfterClass }
-import org.junit.Assert._
-import org.junit.Assume._
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions._
 
 import java.io.File
 import java.nio.file._
@@ -29,7 +27,7 @@ class TastyBootstrapTests {
    *  bootstrapped, and making sure that TASTY can link against a compiled
    *  version of Dotty, and compiling the compiler using the SemanticDB generation
    */
-  @Ignore @Test def tastyBootstrap: Unit = {
+  @Disabled @Test def tastyBootstrap: Unit = {
     implicit val testGroup: TestGroup = TestGroup("tastyBootstrap/tests")
     val libGroup = TestGroup("tastyBootstrap/lib")
     val tastyCoreGroup = TestGroup("tastyBootstrap/tastyCore")
@@ -117,7 +115,7 @@ object TastyBootstrapTests extends ParallelTesting {
   def failedTests = TestReporter.lastRunFailedTests
 
   implicit val summaryReport: SummaryReporting = new SummaryReport
-  @AfterClass def tearDown(): Unit = {
+  @AfterAll def tearDown(): Unit = {
     super.cleanup()
     summaryReport.echoSummary()
   }

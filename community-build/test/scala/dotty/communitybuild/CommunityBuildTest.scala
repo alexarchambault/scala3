@@ -4,8 +4,7 @@ import java.nio.file._
 import java.io.{PrintWriter, File}
 import java.nio.charset.StandardCharsets.UTF_8
 import org.junit.{Ignore, Test}
-import org.junit.Assert.{assertEquals, fail}
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.Assertions.{assertEquals, fail}
 
 import CommunityBuildRunner.run
 
@@ -14,7 +13,7 @@ class TestCategory
 given testRunner: CommunityBuildRunner with
   override def failWith(msg: String) = { fail(msg); ??? }
 
-@Category(Array(classOf[TestCategory]))
+@Tag("TestCategory")
 class CommunityBuildTestA:
   @Test def izumiReflect = projects.izumiReflect.run()
   @Test def scalaSTM = projects.scalaSTM.run()
@@ -33,7 +32,7 @@ class CommunityBuildTestA:
   @Test def zio = projects.zio.run()
 end CommunityBuildTestA
 
-@Category(Array(classOf[TestCategory]))
+@Tag("TestCategory")
 class CommunityBuildTestB:
   @Test def cats = projects.cats.run()
   @Test def catsEffect3 = projects.catsEffect3.run()
@@ -55,7 +54,7 @@ class CommunityBuildTestB:
   @Test def http4s = projects.http4s.run()
 end CommunityBuildTestB
 
-@Category(Array(classOf[TestCategory]))
+@Tag("TestCategory")
 class CommunityBuildTestC:
   @Test def akka = projects.akka.run()
   // Disabled because `javax.xml.bind` is not available since java 11

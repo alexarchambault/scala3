@@ -1,6 +1,6 @@
 package dotty.tools.languageserver
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 import dotty.tools.languageserver.util.Code._
 

@@ -2,7 +2,7 @@ package dotty.tools.pc.tests.signaturehelp
 
 import dotty.tools.pc.base.BaseSignatureHelpSuite
 
-import org.junit.{ Ignore, Test }
+import org.junit.jupiter.api.*
 
 class SignatureHelpSuite extends BaseSignatureHelpSuite:
 
@@ -265,7 +265,7 @@ class SignatureHelpSuite extends BaseSignatureHelpSuite:
          |""".stripMargin
     )
 
-  @Ignore("See if applyCallInfo can still inform on lengthCompare's sig, even if recv is in error")
+  @Disabled("See if applyCallInfo can still inform on lengthCompare's sig, even if recv is in error")
   @Test def `tparam5_TypeMismatch` =
     check(
       """
@@ -291,7 +291,7 @@ class SignatureHelpSuite extends BaseSignatureHelpSuite:
          |""".stripMargin
     )
 
-  @Ignore("Similar to `tparam5_TypeMismatch`")
+  @Disabled("Similar to `tparam5_TypeMismatch`")
   @Test def `tparam5_nonvarargs_TypeMismatch` =
     check(
       """
@@ -597,7 +597,7 @@ class SignatureHelpSuite extends BaseSignatureHelpSuite:
          |""".stripMargin
     )
 
-  @Ignore("Similar to `tparam5_TypeMismatch`")
+  @Disabled("Similar to `tparam5_TypeMismatch`")
   @Test def `last-arg1_TypeMismatch` =
     check(
       """
@@ -1596,7 +1596,7 @@ class SignatureHelpSuite extends BaseSignatureHelpSuite:
         |""".stripMargin,
       "foo[K, V](): Unit"
     )
-  
+
   @Test def `proper-param-list-after-param-empty-list` =
     check(
       """

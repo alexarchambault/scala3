@@ -21,7 +21,7 @@ import dotty.tools.pc.utils._
 
 import org.eclipse.lsp4j.MarkupContent
 import org.eclipse.lsp4j.jsonrpc.messages.Either as JEither
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.TestInstance
 import scala.meta.pc.CompletionItemPriority
 
 object TestResources:
@@ -29,7 +29,7 @@ object TestResources:
   val classpathSearch =
     ClasspathSearch.fromClasspath(classpath, ExcludedPackagesHandler.default)
 
-@RunWith(classOf[ReusableClassRunner])
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BasePCSuite extends PcAssertions:
   val completionItemPriority: CompletionItemPriority = (_: String) => 0
   private val isDebug = ManagementFactory.getRuntimeMXBean.getInputArguments.toString.contains("-agentlib:jdwp")

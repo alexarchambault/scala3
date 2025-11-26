@@ -2,11 +2,9 @@ package dotty.tools.pc.tests.completion
 
 import dotty.tools.pc.base.BaseCompletionSuite
 
-import org.junit.runners.MethodSorters
-import org.junit.{FixMethodOrder, Test}
-import org.junit.Ignore
+import org.junit.jupiter.api.*
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(classOf[MethodOrderer.MethodName])
 class CompletionInterpolatorSuite extends BaseCompletionSuite:
 
   @Test def `string` =
@@ -795,7 +793,7 @@ class CompletionInterpolatorSuite extends BaseCompletionSuite:
          |""".stripMargin
     )
 
-  @Ignore("This case is not yet supported by metals")
+  @Disabled("This case is not yet supported by metals")
   @Test def `prepend-new-missing-interpolator-with-prefix` =
     checkSnippet(
       """|object Wrapper:

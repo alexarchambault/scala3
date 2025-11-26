@@ -7,9 +7,9 @@ import scala.language.unsafeNulls
 import java.io.File
 import java.nio.file.{Path, Paths, Files}
 import scala.sys.process._
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.junit.BeforeClass
-import org.junit.Assert._
+import org.junit.jupiter.api.Assertions._
 import scala.collection.mutable.ListBuffer
 
 import java.net.URLClassLoader
@@ -175,7 +175,7 @@ object CoursierScalaTests:
     execCmd("./cs", (s"""launch "org.scala-lang:scala3-compiler_3:${sys.env("DOTTY_BOOTSTRAPPED_VERSION")}" $newJOpts --main-class "$entry" --property "scala.usejavacp=true" --property "scala.use_legacy_launcher=true"""" +: newOptions), stdin)._2
 
   /** Get coursier script */
-  @BeforeClass def setup(): Unit =
+  @BeforeAll def setup(): Unit =
     val launcherLocation = "https://github.com/coursier/launchers/raw/master"
     val launcherName = execCmd("uname")._2.head.toLowerCase match
       case "linux" => "cs-x86_64-pc-linux"

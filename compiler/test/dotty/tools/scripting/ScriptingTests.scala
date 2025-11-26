@@ -7,12 +7,11 @@ import scala.language.unsafeNulls
 import java.io.File
 import java.nio.file.Path
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import dotty.Assumptions._
 
 import vulpix.TestConfiguration
 import ScriptTestEnv.*
-
-import org.junit.Assume.assumeFalse
 
 /** Runs all tests contained in `compiler/test-resources/scripting/` */
 class ScriptingTests:

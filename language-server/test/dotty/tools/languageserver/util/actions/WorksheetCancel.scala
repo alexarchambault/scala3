@@ -3,7 +3,7 @@ package dotty.tools.languageserver.util.actions
 import dotty.tools.languageserver.util.PositionContext
 import dotty.tools.languageserver.util.embedded.CodeMarker
 
-import org.junit.Assert.assertTrue
+import org.junit.jupiter.api.Assertions.assertTrue
 
 import java.util.concurrent.TimeUnit
 

@@ -1,10 +1,8 @@
 package dotty.tools.backend.jvm
 
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import scala.tools.asm.Opcodes._
-import org.junit.Assert._
+import org.junit.jupiter.api.Assertions._
 
 import ASMConverters._
 

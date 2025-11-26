@@ -5,19 +5,18 @@ package scripting
 import scala.language.unsafeNulls
 
 import java.nio.file.Files, java.nio.charset.StandardCharsets.UTF_8
-import org.junit.{ After, Test, Ignore }
-import org.junit.Assert.assertEquals
-import org.junit.Assume.assumeFalse
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.{io => _, *}
+import dotty.Assertions.assertEquals
+import dotty.Assumptions._
 
 import ScriptTestEnv.*
 
-@Ignore
-@Category(Array(classOf[BootstrappedOnlyTests]))
+@Disabled
+@Tag("BootstrappedOnly")
 class BashExitCodeTests:
   private var myTmpDir: String | Null = null
   private lazy val tmpDir = { myTmpDir = Files.createTempDirectory("exit-code-tests").toFile.absPath; myTmpDir }
-  @After def cleanup(): Unit = {
+  @AfterEach def cleanup(): Unit = {
     if myTmpDir != null then io.Directory(myTmpDir).deleteRecursively()
 
     cleanupScalaCLIDirs()

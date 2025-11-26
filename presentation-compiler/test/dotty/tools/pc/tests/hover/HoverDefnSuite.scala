@@ -2,7 +2,7 @@ package dotty.tools.pc.tests.hover
 
 import dotty.tools.pc.base.BaseHoverSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class HoverDefnSuite extends BaseHoverSuite:
   @Test def `val` =
@@ -284,7 +284,7 @@ class HoverDefnSuite extends BaseHoverSuite:
     check(
       """|
          |@ma@@in
-         |def example() = 
+         |def example() =
          |    println("test")
          |""".stripMargin,
       """|```scala
@@ -296,7 +296,7 @@ class HoverDefnSuite extends BaseHoverSuite:
       check(
         """|
           |@ma@@in
-          |def example() = 
+          |def example() =
           |    List("test")
           |""".stripMargin,
         """|```scala
@@ -308,7 +308,7 @@ class HoverDefnSuite extends BaseHoverSuite:
       check(
         """|
           |@ma@@in
-          |def example() = 
+          |def example() =
           |    Array("test")
           |""".stripMargin,
         """|```scala
@@ -320,7 +320,7 @@ class HoverDefnSuite extends BaseHoverSuite:
       check(
         """|
           |@ma@@in
-          |def example() = 
+          |def example() =
           |    Array(1, 2)
           |""".stripMargin,
         """|```scala

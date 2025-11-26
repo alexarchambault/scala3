@@ -1,7 +1,7 @@
 package dotty.tools.dotc.core.tasty
 
-import org.junit.Assert._
-import org.junit.{Test, Ignore}
+import org.junit.jupiter.api.Assertions._
+import org.junit.jupiter.api.Test
 
 import dotty.tools.tasty.TastyFormat._
 import dotty.tools.tasty.TastyBuffer._

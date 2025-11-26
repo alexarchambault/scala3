@@ -3,7 +3,7 @@ package dotty.tools.languageserver.util.actions
 import dotty.tools.languageserver.util.embedded.CodeMarker
 import dotty.tools.languageserver.util.{CodeRange, PositionContext}
 
-import org.junit.Assert.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 
 import org.eclipse.lsp4j.Location
 

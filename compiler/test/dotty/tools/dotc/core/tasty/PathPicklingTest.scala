@@ -7,8 +7,9 @@ import java.nio.file.{Files, NoSuchFileException, Paths}
 
 import scala.sys.process._
 
-import org.junit.Test
-import org.junit.Assert.{assertEquals, assertTrue, assertFalse, fail}
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.fail
+import dotty.Assertions._
 
 import dotty.tools.dotc.ast.tpd
 import dotty.tools.dotc.ast.tpd.TreeOps

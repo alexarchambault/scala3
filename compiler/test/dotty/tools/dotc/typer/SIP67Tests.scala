@@ -3,8 +3,8 @@ package dotty.tools.dotc.typer
 import dotty.tools.DottyTest
 import dotty.tools.dotc.core.Contexts.*
 
-import org.junit.Test
-import org.junit.Assert.fail
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.fail
 
 class SIP67Tests extends DottyTest:
 
@@ -12,7 +12,7 @@ class SIP67Tests extends DottyTest:
     val ctx = checkCompile("typer", source)((_, _) => ())
     if ctx.reporter.hasErrors then
       fail("Unexpected compilation errors were reported")
-  
+
   @Test
   def sip67test1: Unit =
     checkNoErrors:

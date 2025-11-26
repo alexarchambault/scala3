@@ -1,7 +1,7 @@
 package dotty.tools
 package vulpix
 
-import org.junit.{Test as test, AfterClass as tearDown}
+import org.junit.jupiter.api.{AfterAll as tearDown, Test as test}
 
 /** Unit tests for the Vulpix test suite */
 class VulpixUnitTests:

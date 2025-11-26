@@ -14,7 +14,7 @@ import dotty.tools.pc.utils.TextEdits
 import dotty.tools.pc.PcConvertToNamedLambdaParameters
 
 import org.eclipse.lsp4j as l
-import org.junit.{Test, Ignore}
+import org.junit.jupiter.api.*
 
 class ConvertToNamedLambdaParametersSuite extends BaseCodeActionSuite:
 
@@ -148,7 +148,7 @@ class ConvertToNamedLambdaParametersSuite extends BaseCodeActionSuite:
       |}""".stripMargin
   )
 
-  @Ignore
+  @Disabled
   @Test def `Int => Int eta-expansion in map` =
     checkEdit(
       """|object A{

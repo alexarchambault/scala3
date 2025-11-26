@@ -14,7 +14,7 @@ import dotty.tools.io.Directory
 import java.io._
 import java.nio.file.{Path => JPath}
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class PatmatExhaustivityTest {
   val testsDir = "tests/patmat"

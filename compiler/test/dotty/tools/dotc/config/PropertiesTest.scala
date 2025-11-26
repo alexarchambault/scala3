@@ -1,14 +1,13 @@
 package dotty.tools.dotc.config
 
-import org.junit.Before
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.*
+import dotty.Assertions._
 import scala.language.unsafeNulls
 
 class PropertiesTest {
   final val TestProperty = "dotty.tools.dotc.config.PropertiesTest.__test_property__"
 
-  @Before
+  @BeforeEach
   def beforeEach(): Unit = {
     Properties.clearProp(TestProperty)
   }

@@ -2,7 +2,7 @@ package dotty.tools.languageserver
 
 import dotty.tools.languageserver.util.Code._
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ImplementationTest {
 

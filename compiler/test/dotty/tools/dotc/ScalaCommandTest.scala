@@ -2,19 +2,13 @@ package dotty.tools.dotc
 
 import scala.language.unsafeNulls
 
-import org.junit.Test
-import org.junit.Assert._
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.api.Assertions._
 import dotty.tools.dotc.config.Settings._
 import core.Contexts.{Context, ContextBase}
 
 class ScalaCommandTest:
-
-  private val _temporaryFolder = new TemporaryFolder
-
-  @Rule
-  def temporaryFolder = _temporaryFolder
 
   @Test def `Simple one parameter`: Unit = inContext {
     val settings = config.ScalaSettings
@@ -25,9 +19,9 @@ class ScalaCommandTest:
     assertEquals("files" :: Nil, summary.arguments)
   }
 
-  @Test def `Unfold @file`: Unit = inContext {
+  @Test def `Unfold @file`(@TempDir temporaryFolder: java.nio.file.Path): Unit = inContext {
     val settings = config.ScalaSettings
-    val file = temporaryFolder.newFile("config")
+    val file = temporaryFolder.resolve("config").toFile
     val writer = java.io.FileWriter(file);
     writer.write("-sourceroot myNewRoot someMoreFiles");
     writer.close();
