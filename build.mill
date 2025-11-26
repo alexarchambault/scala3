@@ -413,7 +413,9 @@ object compiler extends Module {
         mvn"io.get-coursier:coursier_2.13:2.0.16".exclude(("org.scala-lang", "scala-library"))
       )
 
-      def testArgsDefault = Seq("--exclude-categories=dotty.BootstrappedOnlyTests")
+      def testArgsDefault = super.testArgsDefault() ++ Seq(
+        "--run-listener=dotty.tools.ContextEscapeDetector"
+      )
       def testSandboxWorkingDir = false
 
       def libraryClassPath: T[Seq[PathRef]]
@@ -464,6 +466,9 @@ object compiler extends Module {
 
       object test extends CompilerTests {
         def libraryClassPath = library.hybrid.bootstrapping.runClasspath()
+        def testArgsDefault = super.testArgsDefault() ++ Seq(
+          "--exclude-categories=dotty.BootstrappedOnlyTests"
+        )
       }
     }
     object `final` extends Compiler with Hybrid {
@@ -488,6 +493,9 @@ object compiler extends Module {
       object test extends CompilerTests {
         def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
         def libraryClassPath = library.pure.bootstrapping.runClasspath()
+        def testArgsDefault = super.testArgsDefault() ++ Seq(
+          "--exclude-categories=dotty.BootstrappedOnlyTests"
+        )
       }
     }
     object `final` extends Compiler with Pure {
