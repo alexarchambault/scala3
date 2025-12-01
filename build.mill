@@ -7,6 +7,8 @@ import com.github.lolgab.mill.mima.Mima
 import scala3build.*
 
 import java.io.File
+import java.nio.charset.StandardCharsets
+import java.util.Arrays
 
 import mill.*
 import mill.scalalib.*
@@ -352,7 +354,7 @@ object compiler extends Module {
   def testSources = Task.Sources("test")
   def testResources = Task.Sources("test-resources")
 
-  def compilerPropertiesResources = Task {
+  def compilerPropertiesResources = Task(persistent = true) {
     val file = Task.dest / "compiler.properties"
     val dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss")
     dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"))
@@ -361,8 +363,13 @@ object compiler extends Module {
          |maven.version.number=${interfaces.publishVersion()}
          |git.hash=${VersionUtil.gitHash}
          |copyright.string=Copyright 2002-${VersionUtil.currentYear}, LAMP/EPFL
-       """.stripMargin
-    os.write(file, contents)
+       """.stripMargin.getBytes(StandardCharsets.UTF_8)
+
+    if (os.isFile(file) && !Arrays.equals(os.read.bytes(file), contents))
+      os.write.over(file, contents)
+
+    for (f <- os.list(Task.dest) if f != file)
+      os.remove.all(f)
 
     PathRef(Task.dest)
   }
