@@ -24,7 +24,7 @@ trait Scala3JavaModule extends JavaModule with PublishModule with Mima {
     def sources = testSources
     def testParallelism = false
     def junitPlatformVersion = "1.14.1"
-    def jupiterVersion = "5.11.4"
+    def jupiterVersion = Versions.junitJupiter
   }
 
   def jvmId = "17" // force external zinc worker
@@ -64,7 +64,6 @@ trait Scala3Module extends Scala3JavaModule with ScalaModule { outer =>
     "-deprecation",
     "-unchecked",
     //"-Wconf:cat=deprecation&msg=Unsafe:s",    // example usage
-    "-Werror",
     //"-Wunused:all",
     //"-rewrite", // requires -Werror:false since no rewrites are applied with errors
     "-encoding", "UTF8",
@@ -171,7 +170,8 @@ object library extends Module {
   trait Library extends Scala3Module {
     def scalacOptions = super.scalacOptions() ++ Seq(
       "-sourcepath", sources().map(_.path).distinct.mkString(File.pathSeparator),
-      "-Yexplicit-nulls"
+      "-Yexplicit-nulls",
+      "-Werror"
     )
 
     /*
@@ -277,6 +277,42 @@ object tasty extends Module {
     object `final` extends Tasty with Pure {
       def moduleDeps = super.moduleDeps ++ Seq(library.pure.`final`)
       def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
+    }
+  }
+}
+
+object `test-helpers` extends Module {
+  def src = Task.Source("src")
+  trait TestHelpers extends Scala3Module {
+    def sources = Task {
+      Seq(src())
+    }
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      mvn"org.junit.jupiter:junit-jupiter-api:${Versions.junitJupiter}"
+    )
+  }
+  object hybrid extends Module {
+    object bootstrapping extends TestHelpers with Bootstrapping {
+      def moduleDeps = Seq(
+        compiler.hybrid.bootstrapping
+      )
+    }
+    object `final` extends TestHelpers with Hybrid {
+      def moduleDeps = Seq(
+        compiler.hybrid.`final`
+      )
+    }
+  }
+  object pure extends Module {
+    object bootstrapping extends TestHelpers with Bootstrapping {
+      def moduleDeps = Seq(
+        compiler.pure.bootstrapping
+      )
+    }
+    object `final` extends TestHelpers with Pure {
+      def moduleDeps = Seq(
+        compiler.pure.`final`
+      )
     }
   }
 }
@@ -467,6 +503,9 @@ object compiler extends Module {
       }
 
       object test extends CompilerTests {
+        def moduleDeps = super.moduleDeps ++ Seq(
+          `test-helpers`.hybrid.bootstrapping
+        )
         def libraryClassPath = library.hybrid.bootstrapping.runClasspath()
         def testArgsDefault = super.testArgsDefault() ++ Seq(
           "--exclude-tags=BootstrappedOnly"
@@ -480,6 +519,9 @@ object compiler extends Module {
       )
 
       object test extends CompilerTests {
+        def moduleDeps = super.moduleDeps ++ Seq(
+          `test-helpers`.hybrid.`final`
+        )
         def libraryClassPath = library.hybrid.`final`.runClasspath()
       }
     }
@@ -493,6 +535,9 @@ object compiler extends Module {
       def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
 
       object test extends CompilerTests {
+        def moduleDeps = super.moduleDeps ++ Seq(
+          `test-helpers`.pure.bootstrapping
+        )
         def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
         def libraryClassPath = library.pure.bootstrapping.runClasspath()
         def testArgsDefault = super.testArgsDefault() ++ Seq(
@@ -508,6 +553,9 @@ object compiler extends Module {
       def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
 
       object test extends CompilerTests {
+        def moduleDeps = super.moduleDeps ++ Seq(
+          `test-helpers`.pure.`final`
+        )
         def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
         def libraryClassPath = library.pure.`final`.runClasspath()
       }
@@ -520,4 +568,338 @@ object staging extends Scala3Module with Hybrid {
   def scalacOptions = super.scalacOptions() ++
     // FIXME Not sure why we have to add this, it seems it's not added in the sbt build
     Seq("-experimental")
+}
+
+object `tasty-inspector` extends Module {
+  def src = Task.Source("src")
+
+  trait TastyInspector extends Scala3Module {
+    def sources = Task {
+      Seq(src())
+    }
+    def scalacOptions = super.scalacOptions() ++ Seq(
+      "-experimental"
+    )
+  }
+
+  object hybrid extends Module {
+    object bootstrapping extends TastyInspector with Bootstrapping {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.hybrid.bootstrapping
+      )
+    }
+    object `final` extends TastyInspector with Hybrid {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.hybrid.`final`
+      )
+    }
+  }
+  object pure extends Module {
+    object bootstrapping extends TastyInspector with Bootstrapping {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.pure.bootstrapping
+      )
+    }
+    object `final` extends TastyInspector with Pure {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.pure.`final`
+      )
+    }
+  }
+}
+
+object `scaladoc-testcases` extends Module {
+  def src = Task.Source("src")
+
+  trait ScaladocTestcases extends Scala3Module with mill.scala3build.CompileClassesPathHelper {
+    def sources = Task {
+      Seq(src())
+    }
+  }
+
+  object hybrid extends Module {
+    object bootstrapping extends ScaladocTestcases with Bootstrapping {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.hybrid.bootstrapping
+      )
+    }
+    object `final` extends ScaladocTestcases with Hybrid {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.hybrid.`final`
+      )
+    }
+  }
+  object pure extends Module {
+    object bootstrapping extends ScaladocTestcases with Bootstrapping {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.pure.bootstrapping
+      )
+    }
+    object `final` extends ScaladocTestcases with Pure {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.pure.`final`
+      )
+    }
+  }
+}
+
+object scaladoc extends Module {
+  def src = Task.Source("src")
+  def testSrc = Task.Source("test")
+
+  def `test-documentations` = Task.Source("test-documentations")
+
+  private def flexmarkVersion = "0.62.2"
+  private def jacksonVersion = "2.15.1"
+
+  def buildInfoSources = Task {
+    val dir = Task.dest
+    os.write(
+      dir / "dotty/tools/scaladoc/BuildInfo.scala",
+      s"""package dotty.tools.scaladoc
+         |
+         |object BuildInfo {
+         |  def version = "${Versions.dottyVersion}"
+         |}
+         |""".stripMargin,
+      createFolders = true
+    )
+    PathRef(dir)
+  }
+
+  trait Scaladoc extends Scala3Module { scaladoc =>
+    def sources = Task {
+      Seq(src(), buildInfoSources())
+    }
+    def testSources = Task {
+      Seq(testSrc(), buildInfoTestSources())
+    }
+    def scalacOptions = super.scalacOptions() ++ Seq(
+      "-experimental"
+    )
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      mvn"com.vladsch.flexmark:flexmark:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-util-ast:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-util-data:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-util-html:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-ext-anchorlink:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-ext-autolink:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-ext-emoji:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-ext-gfm-strikethrough:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-ext-gfm-tasklist:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-ext-wikilink:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-ext-tables:$flexmarkVersion",
+      mvn"com.vladsch.flexmark:flexmark-ext-yaml-front-matter:$flexmarkVersion",
+      mvn"nl.big-o:liqp:0.8.2",
+      mvn"org.jsoup:jsoup:1.17.2", // Original comment: Needed to process .html files for static site
+      mvn"com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion"
+    )
+    def mainClass = Some("dotty.tools.scaladoc.Main")
+
+    def scaladocTestcasesCompile: T[mill.javalib.api.CompilationResult]
+    def scaladocTestcasesCompileClassesPath: T[mill.javalib.UnresolvedPath]
+    def buildInfoTestSources = Task {
+      val dir = Task.dest
+      val tq = "\"\"\""
+      os.write(
+        dir / "dotty/tools/scaladoc/test/BuildInfo.scala",
+        s"""package dotty.tools.scaladoc.test
+           |
+           |object BuildInfo {
+           |  def test_testcasesOutputDir: Seq[String] = Seq($tq${scaladocTestcasesCompileClassesPath().resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)}$tq)
+           |  def test_testcasesSourceRoot: String = $tq${`scaladoc-testcases`.src().path}$tq
+           |  def testDocumentationRoot: String = $tq${`test-documentations`().path}$tq
+           |}
+           |""".stripMargin,
+        createFolders = true
+      )
+      PathRef(dir)
+    }
+
+    trait ScaladocTests extends Scala3Tests with Scala3Module {
+      def testSources = scaladoc.testSources
+      def runClasspath = Task {
+        // Ensure scaladoc-testcases is compiled, so that the directory
+        // we refer to via scaladocTestcasesCompileClassesPath exists
+        scaladocTestcasesCompile()
+        super.runClasspath()
+      }
+    }
+  }
+
+  object hybrid extends Module {
+    object bootstrapping extends Scaladoc with Bootstrapping {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.hybrid.bootstrapping,
+        `tasty-inspector`.hybrid.bootstrapping
+      )
+      def scaladocTestcasesCompile = `scaladoc-testcases`.hybrid.bootstrapping.compile
+      def scaladocTestcasesCompileClassesPath = `scaladoc-testcases`.hybrid.bootstrapping.compileClassesPath0
+      object test extends ScaladocTests with Bootstrapping {
+        def moduleDeps = super.moduleDeps ++ Seq(
+          `test-helpers`.hybrid.bootstrapping
+        )
+      }
+    }
+    object `final` extends Scaladoc with Hybrid {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.hybrid.`final`,
+        `tasty-inspector`.hybrid.`final`
+      )
+      def scaladocTestcasesCompile = `scaladoc-testcases`.hybrid.`final`.compile
+      def scaladocTestcasesCompileClassesPath = `scaladoc-testcases`.hybrid.`final`.compileClassesPath0
+      object test extends ScaladocTests with Hybrid {
+        def moduleDeps = super.moduleDeps ++ Seq(
+          `test-helpers`.hybrid.`final`
+        )
+      }
+    }
+  }
+  object pure extends Module {
+    object bootstrapping extends Scaladoc with Bootstrapping {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.pure.bootstrapping,
+        `tasty-inspector`.pure.bootstrapping
+      )
+      def scaladocTestcasesCompile = `scaladoc-testcases`.pure.bootstrapping.compile
+      def scaladocTestcasesCompileClassesPath = `scaladoc-testcases`.pure.bootstrapping.compileClassesPath0
+      object test extends ScaladocTests with Bootstrapping {
+        def moduleDeps = super.moduleDeps ++ Seq(
+          `test-helpers`.pure.bootstrapping
+        )
+      }
+    }
+    object `final` extends Scaladoc with Pure {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        compiler.pure.`final`,
+        `tasty-inspector`.pure.`final`
+      )
+      def scaladocTestcasesCompile = `scaladoc-testcases`.pure.`final`.compile
+      def scaladocTestcasesCompileClassesPath = `scaladoc-testcases`.pure.`final`.compileClassesPath0
+      object test extends ScaladocTests with Pure {
+        def moduleDeps = super.moduleDeps ++ Seq(
+          `test-helpers`.pure.`final`
+        )
+      }
+    }
+  }
+}
+
+object `presentation-compiler` extends CoursierModule {
+
+  def mtagsVersion = "1.6.2"
+
+  def src = Task.Source("src")
+  def testSrc = Task.Source("test")
+
+  def mtagsSharedSources = Task {
+    val srcPath = defaultResolver().classpath(
+      Seq(mvn"org.scalameta:mtags-shared_2.13.16:$mtagsVersion".dep.withTransitive(false)),
+      sources = true
+    )
+    assert(srcPath.length == 1, "Expected a single source JAR")
+    val srcJar = srcPath.head.path
+    os.unzip(srcJar, Task.dest)
+
+    for (f <- os.walk(Task.dest) if os.isFile(f) && f.last.endsWith(".scala")) {
+      val lines = os.read.lines(f).toList
+      val updatedLines = Shading.insertUnsafeNullsImport(Shading.replaceProtobuf(lines))
+      os.write.over(f, updatedLines.mkString(System.lineSeparator()))
+    }
+
+    PathRef(Task.dest)
+  }
+
+  trait PresentationCompiler extends Scala3Module {
+
+    def buildInfoSources = Task {
+      val dir = Task.dest
+      os.write(
+        dir / "dotty/tools/pc/buildinfo/BuildInfo.scala",
+        s"""package dotty.tools.pc.buildinfo
+           |
+           |object BuildInfo {
+           |  def scalaVersion = "${scalaVersion()}"
+           |}
+           |""".stripMargin,
+        createFolders = true
+      )
+      PathRef(dir)
+    }
+
+    def testBuildInfoSources = Task {
+      val dir = Task.dest
+      val tq = "\"\"\""
+      // TODO Add scala3-presentation-compiler-testcases cp too
+      val testDepCp = library.pure.`final`.runClasspath().map(_.path)
+      os.write(
+        dir / "dotty/tools/pc/tests/buildinfo/BuildInfo.scala",
+        s"""package dotty.tools.pc.tests.buildinfo
+           |
+           |import java.io.File
+           |
+           |object BuildInfo {
+           |  def scalaVersion = "${scalaVersion()}"
+           |  def ideTestsDependencyClasspath = ${testDepCp.map(p => s"new File($tq$p$tq)").mkString("Seq(", ", ", ")")}
+           |}
+           |""".stripMargin,
+        createFolders = true
+      )
+      PathRef(dir)
+    }
+
+    def sources = Task {
+      Seq(`presentation-compiler`.src(), mtagsSharedSources(), buildInfoSources())
+    }
+
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      mvn"org.lz4:lz4-java:1.8.0",
+      mvn"io.get-coursier:interface:1.0.18",
+      mvn"org.scalameta:mtags-interfaces:$mtagsVersion",
+      mvn"com.google.guava:guava:33.2.1-jre"
+    )
+    def scalacOptions = super.scalacOptions() ++ Seq(
+      "-source", "3.3", // Original comment: To avoid fatal migration warnings
+      "-Yexplicit-nulls", "-Wsafe-init",
+      "-experimental" // not needed in sbt, not sure why we need it here
+    )
+
+    trait PresentationCompilerTests extends Scala3Tests {
+      def testSources = Task {
+        Seq(`presentation-compiler`.testSrc(), testBuildInfoSources())
+      }
+      def mvnDeps = super.mvnDeps() ++ Seq(
+        mvn"org.hamcrest:hamcrest-core:1.3"
+      )
+    }
+  }
+
+  object hybrid extends Module {
+    object bootstrapping extends PresentationCompiler with Bootstrapping {
+      def moduleDeps = Seq(
+        compiler.hybrid.bootstrapping
+      )
+      object test extends PresentationCompilerTests
+    }
+    object `final` extends PresentationCompiler with Hybrid {
+      def moduleDeps = Seq(
+        compiler.hybrid.`final`
+      )
+      object test extends PresentationCompilerTests
+    }
+  }
+  object pure extends Module {
+    object bootstrapping extends PresentationCompiler with Bootstrapping {
+      def moduleDeps = Seq(
+        compiler.pure.bootstrapping
+      )
+      object test extends PresentationCompilerTests
+    }
+    object `final` extends PresentationCompiler with Pure {
+      def moduleDeps = Seq(
+        compiler.pure.`final`
+      )
+      object test extends PresentationCompilerTests
+    }
+  }
 }

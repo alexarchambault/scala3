@@ -48,6 +48,28 @@ object Shading {
     recur(lines, false)
   }
 
+  def replaceProtobuf(lines: List[String]): List[String] =
+    // replace imports of `com.google.protobuf.*` with compiler implemented version
+    lines match {
+      case l :: rest =>
+        val lt = l.trim()
+        if (lt.isEmpty || lt.startsWith("package ") || lt.startsWith("import ")) {
+          val newLine =
+            if (lt.startsWith("import com.google.protobuf."))
+              if (lt == "import com.google.protobuf.CodedInputStream")
+                "import dotty.tools.dotc.semanticdb.internal.SemanticdbInputStream as CodedInputStream"
+              else if (lt == "import com.google.protobuf.CodedOutputStream")
+                "import dotty.tools.dotc.semanticdb.internal.SemanticdbOutputStream as CodedOutputStream"
+              else
+                l
+            else
+              l
+          newLine :: replaceProtobuf(rest)
+        } else
+          lines // don't check rest of file
+      case _ => lines
+    }
+
   def csDep(org: String, name: String, version: String): coursier.Dependency =
     coursier.Dependency(
       coursier.Module(coursier.Organization(org), coursier.ModuleName(name), Map.empty),
