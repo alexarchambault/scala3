@@ -6,6 +6,22 @@ on:
   pull_request:
 
 jobs:
+  compile-all:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 17
+    - name: Setup Mill
+      run: .github/scripts/setup-dev-mill.sh
+    - name: Compile everything
+      run: ./mill -i __.compile
+
   hybrid-bootstrapping-tests:
     runs-on: ubuntu-latest
     steps:
