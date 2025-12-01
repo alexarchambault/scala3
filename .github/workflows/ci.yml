@@ -19,6 +19,8 @@ jobs:
         jvm: 17
     - name: Setup Mill
       run: .github/scripts/setup-dev-mill.sh
+    - name: No modules with empty sources
+      run: ./mill -i ci.noEmptySources --tasks __.allSourceFiles
     - name: Compile everything
       run: ./mill -i __.compile
 

@@ -903,3 +903,17 @@ object `presentation-compiler` extends CoursierModule {
     }
   }
 }
+
+object ci extends Module {
+  def noEmptySources(tasks: mill.util.Tasks[Seq[PathRef]]) = Task.Command[Unit] {
+    val values = tasks.value.zip(Task.sequence(tasks.value)())
+    val invalid = values.filter(_._2.isEmpty)
+
+    if (invalid.nonEmpty) {
+      System.err.println("Found modules with no sources:")
+      for ((m, _) <- invalid)
+        System.err.println(s"  $m")
+      sys.error(s"Found modules with no sources: ${invalid.map(_._1).mkString(", ")}")
+    }
+  }
+}
