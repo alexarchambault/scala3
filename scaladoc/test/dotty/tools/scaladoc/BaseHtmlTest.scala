@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.nio.charset.Charset
-import dotty.tools.scaladoc.test.BuildInfo
 import util.IO
 
 import dotty.Assertions.*

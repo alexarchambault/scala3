@@ -3,7 +3,6 @@ package dotty.tools.scaladoc
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
-import dotty.tools.scaladoc.test.BuildInfo
 import java.io.File
 import java.nio.file.Path;
 import org.jsoup.Jsoup
