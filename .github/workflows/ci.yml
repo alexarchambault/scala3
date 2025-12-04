@@ -8,6 +8,7 @@ on:
 jobs:
   compile-all:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
     - uses: actions/checkout@v5
       with:
@@ -26,6 +27,7 @@ jobs:
 
   hybrid-bootstrapping-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
     - uses: actions/checkout@v5
       with:
@@ -42,6 +44,7 @@ jobs:
 
   hybrid-final-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
     - uses: actions/checkout@v5
       with:
@@ -58,6 +61,7 @@ jobs:
 
   pure-bootstrapping-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
     - uses: actions/checkout@v5
       with:
@@ -74,6 +78,7 @@ jobs:
 
   pure-final-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
     - uses: actions/checkout@v5
       with:
