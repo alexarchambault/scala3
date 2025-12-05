@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-MILL_COMMIT="3c5e636923ab"
+MILL_COMMIT="7be4725cfd"
 
 git clone https://github.com/alexarchambault/mill.git -b scala3 mill-scala3
 cd mill-scala3
