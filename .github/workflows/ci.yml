@@ -47,4 +47,4 @@ jobs:
     - name: Setup Mill
       run: .github/scripts/setup-dev-mill.sh
     - name: Test
-      run: ./mill -i __.[${{ matrix.KIND }},${{ matrix.LEVEL }}].${{ matrix.TEST }}
+      run: ./mill -i '__[${{ matrix.KIND }},${{ matrix.LEVEL }}].${{ matrix.TEST }}'

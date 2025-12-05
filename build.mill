@@ -74,30 +74,29 @@ trait Scala3JavaModule extends JavaModule with PublishModule with Mima {
 }
 
 trait Scala3Module extends Scala3JavaModule with ScalaModule { outer =>
-  def isHybrid: Boolean = false
-  def isBootstrapping: Boolean = false
+  def kindLevel: KindLevel = KindLevel(Kind.Pure, Level.Final)
 
   def scalaVersion =
-    if (isBootstrapping) Versions.referenceVersion
+    if (kindLevel.isBootstrapping) Versions.referenceVersion
     else Versions.dottyVersion
 
   def scalaLibraryMvnDeps = Nil
   def scalaCompilerClasspath =
-    if (isBootstrapping)
+    if (kindLevel.isBootstrapping)
       Task {
         defaultResolver().classpath(
           Seq(mvn"org.scala-lang:scala3-compiler_3:${Versions.referenceVersion}")
         )
       }
     else
-      if (isHybrid) compiler(KindLevel(Kind.Hybrid, Level.Bootstrapping)).runClasspathAsJars
+      if (kindLevel.isHybrid) compiler(KindLevel(Kind.Hybrid, Level.Bootstrapping)).runClasspathAsJars
       else compiler(KindLevel(Kind.Pure, Level.Bootstrapping)).runClasspathAsJars
 
   def scalaCompilerBridge =
-    if (isBootstrapping)
+    if (kindLevel.isBootstrapping)
       Task(None)
     else
-      if (isHybrid)
+      if (kindLevel.isHybrid)
         Task {
           Some(`sbt-bridge`(KindLevel(Kind.Hybrid, Level.Bootstrapping)).jar())
         }
@@ -123,13 +122,12 @@ trait Scala3Module extends Scala3JavaModule with ScalaModule { outer =>
     def scalaCompilerClasspath = outer.scalaCompilerClasspath
   }
 
-  def scalaInternalKeepScala2Library = isHybrid && !isBootstrapping
-  def enableBsp = isBootstrapping || enableBspForFinalModules
+  def scalaInternalKeepScala2Library = kindLevel.isHybrid && !kindLevel.isBootstrapping
+  def enableBsp = kindLevel.isBootstrapping || enableBspForFinalModules
 }
 
 trait CrossScala3Module extends Cross.Module[KindLevel] with Scala3Module {
-  def isHybrid = crossValue.isHybrid
-  def isBootstrapping = crossValue.isBootstrapping
+  def kindLevel = crossValue
 }
 
 object interfaces extends Scala3JavaModule
@@ -152,7 +150,7 @@ trait Library extends CrossScala3Module with mill.scala3build.CompileClassesPath
       "-sourcepath", sources().map(_.path).distinct.mkString(File.pathSeparator),
       "-Yexplicit-nulls"
     )
-    if (isHybrid)
+    if (kindLevel.isHybrid)
       super.scalacOptions() ++ Seq("-Werror") ++ sharedOptions
     else
       // Original comment: TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
@@ -162,7 +160,7 @@ trait Library extends CrossScala3Module with mill.scala3build.CompileClassesPath
   }
 
   def mvnDeps = super.mvnDeps() ++ {
-    if (isHybrid)
+    if (kindLevel.isHybrid)
       Seq(mvn"org.scala-lang:scala-library:${Versions.stdlibNonBootstrappedVersion}")
     else
       Nil
@@ -170,7 +168,7 @@ trait Library extends CrossScala3Module with mill.scala3build.CompileClassesPath
 
   def baseSource = Task.Source("src")
   def sources =
-    if (isHybrid)
+    if (kindLevel.isHybrid)
       Task {
         val src0 = baseSource().path
         os.walk(src0)
@@ -198,8 +196,8 @@ trait Library extends CrossScala3Module with mill.scala3build.CompileClassesPath
   }
 
   def runClasspath =
-    if (isHybrid)
-      if (isBootstrapping)
+    if (kindLevel.isHybrid)
+      if (kindLevel.isBootstrapping)
         Task {
           super.runClasspath().filter { ref =>
             ref.path.startsWith(BuildCtx.workspaceRoot) ||
@@ -217,7 +215,7 @@ trait Library extends CrossScala3Module with mill.scala3build.CompileClassesPath
       }
 
   def precomputedRunClasspath: T[Seq[String]] =
-    if (isHybrid)
+    if (kindLevel.isHybrid)
       Task {
         resolvedRunMvnDeps().map(_.path.toString) ++
           Seq(compileClassesPath0.toString)
@@ -247,7 +245,7 @@ trait Tasty extends CrossScala3Module {
   def sources = Task.Sources("src")
   def scalacOptions = super.scalacOptions() ++ {
     val sharedOptions = Seq("-source:3.0-migration")
-    val extraOptions = if (isHybrid) Nil else Seq("-Yno-stdlib-patches")
+    val extraOptions = if (kindLevel.isHybrid) Nil else Seq("-Yno-stdlib-patches")
     sharedOptions ++ extraOptions
   }
 }
@@ -337,7 +335,7 @@ trait Compiler extends CrossScala3Module { outer =>
 
   def sources = Task {
     val extraSources =
-      if (isHybrid && isBootstrapping) Seq(nonBootstrappedSources()) else Nil
+      if (kindLevel.isHybrid && kindLevel.isBootstrapping) Seq(nonBootstrappedSources()) else Nil
     Seq(mainSources(), shadedSources()) ++ extraSources
   }
   def resources = Task {
@@ -373,7 +371,7 @@ trait Compiler extends CrossScala3Module { outer =>
   )
 
   def scalacOptions = Task {
-    val extraOptions = if (isHybrid) Nil else Seq("-Yno-stdlib-patches")
+    val extraOptions = if (kindLevel.isHybrid) Nil else Seq("-Yno-stdlib-patches")
     super.scalacOptions()
       // TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
       .filter(_ != "-Werror") ++
@@ -417,12 +415,12 @@ trait Compiler extends CrossScala3Module { outer =>
     )
 
     def scalacOptions = Task {
-      val extraOptions = if (isHybrid) Nil else Seq("-Yno-stdlib-patches")
+      val extraOptions = if (kindLevel.isHybrid) Nil else Seq("-Yno-stdlib-patches")
       super.scalacOptions() ++ extraOptions
     }
 
     def testArgsDefault = Task {
-      val extraArgs = if (isBootstrapping) Seq("--exclude-tags=BootstrappedOnly") else Nil
+      val extraArgs = if (kindLevel.isBootstrapping) Seq("--exclude-tags=BootstrappedOnly") else Nil
       super.testArgsDefault() ++
         Seq("--listener=dotty.tools.ContextEscapeDetector") ++
         extraArgs
@@ -471,7 +469,7 @@ trait Compiler extends CrossScala3Module { outer =>
 object compiler extends Cross[Compiler](KindLevel.allValues)
 
 object staging extends Scala3Module {
-  def isHybrid = true
+  def kindLevel = KindLevel(Kind.Hybrid, Level.Final)
   def moduleDeps = Seq(compiler(KindLevel(Kind.Pure, Level.Final)))
   def scalacOptions = super.scalacOptions() ++
     // FIXME Not sure why we have to add this, it seems it's not added in the sbt build
