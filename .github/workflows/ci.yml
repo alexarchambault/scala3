@@ -25,8 +25,15 @@ jobs:
     - name: Compile everything
       run: ./mill -i __.compile
 
-  hybrid-bootstrapping-tests:
+  tests:
     runs-on: ubuntu-latest
+    name: ${{ matrix.KIND }}-${{ matrix.LEVEL }}-${{ matrix.TEST }}
+    strategy:
+      fail-fast: false
+      matrix:
+        KIND: ["hybrid", "pure"]
+        LEVEL: ["bootstrapping", "final"]
+        TEST: ["test", "munit"]
     timeout-minutes: 120
     steps:
     - uses: actions/checkout@v5
@@ -40,55 +47,4 @@ jobs:
     - name: Setup Mill
       run: .github/scripts/setup-dev-mill.sh
     - name: Test
-      run: ./mill -i __.hybrid.bootstrapping.test
-
-  hybrid-final-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-    - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
-        submodules: true
-    - uses: coursier/cache-action@v6
-    - uses: coursier/setup-action@v1
-      with:
-        jvm: 17
-    - name: Setup Mill
-      run: .github/scripts/setup-dev-mill.sh
-    - name: Test
-      run: ./mill -i __.hybrid.final.test
-
-  pure-bootstrapping-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-    - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
-        submodules: true
-    - uses: coursier/cache-action@v6
-    - uses: coursier/setup-action@v1
-      with:
-        jvm: 17
-    - name: Setup Mill
-      run: .github/scripts/setup-dev-mill.sh
-    - name: Test
-      run: ./mill -i __.pure.bootstrapping.test
-
-  pure-final-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-    - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
-        submodules: true
-    - uses: coursier/cache-action@v6
-    - uses: coursier/setup-action@v1
-      with:
-        jvm: 17
-    - name: Setup Mill
-      run: .github/scripts/setup-dev-mill.sh
-    - name: Test
-      run: ./mill -i __.pure.final.test
+      run: ./mill -i __.${{ matrix.KIND }}.${{ matrix.LEVEL }}.${{ matrix.TEST }}

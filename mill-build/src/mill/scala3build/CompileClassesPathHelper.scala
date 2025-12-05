@@ -1,7 +1,8 @@
 package mill.scala3build
 
+import mill.api.BuildCtx
 import mill.scalalib.*
 
 trait CompileClassesPathHelper extends ScalaModule {
-  def compileClassesPath0 = compileClassesPath
+  def compileClassesPath0 = compileClassesPath.resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)
 }

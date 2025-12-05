@@ -1180,16 +1180,14 @@ trait ParallelTesting extends RunnerOrchestration:
       shouldSuppressOutput: Boolean = shouldSuppressOutput): CompilationTest =
         CompilationTest(targets, times, shouldDelete, threadLimit, shouldFail, shouldSuppressOutput)
 
+    def splitTests[T](run: CompilationTest => Unit)(define: (String, () => Unit) => T): Seq[T] =
+      targets.map { target =>
+        val test0 = copy(List(target))
+        define(target.title, () => run(test0))
+      }
+
     def dynamicTests(run: CompilationTest => Unit): java.util.Collection[DynamicTest] =
-      targets
-        .map { target =>
-          val test0 = copy(List(target))
-          DynamicTest.dynamicTest(
-            target.title,
-            () => run(test0)
-          )
-        }
-        .asJava
+      splitTests(run)((name, body) => DynamicTest.dynamicTest(name, () => body())).asJava
 
     def namedDynamicTests(name: String)(run: CompilationTest => Unit): java.util.Collection[DynamicTest] =
       targets

@@ -19,12 +19,28 @@ import mill.api.BuildCtx
 def enableBspForFinalModules = false
 
 trait Scala3JavaModule extends JavaModule with PublishModule with Mima {
-  trait Scala3JavaTests extends JavaTests with TestModule.Junit5 {
+  trait Scala3JavaTests extends JavaTests with TestModule with TestModule.Junit5 {
     def testSources: T[Seq[PathRef]]
     def sources = testSources
     def testParallelism = false
-    def junitPlatformVersion = "1.14.1"
-    def jupiterVersion = Versions.junitJupiter
+
+    def useMunit: Boolean = false
+
+    def testFramework =
+      if (useMunit) "munit.Framework"
+      else "com.github.sbt.junit.jupiter.api.JupiterFramework"
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      mvn"com.github.sbt.junit:jupiter-interface:0.13.3",
+      mvn"org.junit.platform:junit-platform-launcher:1.14.1",
+      mvn"org.junit.jupiter:junit-jupiter-api:${Versions.junitJupiter}",
+      mvn"org.scalameta::munit:1.2.1"
+        .exclude(("org.scala-lang", "scala-library"))
+        .exclude(("org.scala-lang", "scala3-library_3"))
+    )
+
+    def discoveredTestClasses =
+      if (useMunit) super[TestModule].discoveredTestClasses
+      else super[Junit5].discoveredTestClasses
   }
 
   def jvmId = "17" // force external zinc worker
@@ -198,9 +214,9 @@ object library extends Module {
         mvn"org.scala-lang:scala-library:${Versions.stdlibNonBootstrappedVersion}"
       )
       def sources = library.scala3Sources
-      def precomputedRunClasspath: T[Seq[PathRef]] = Task {
-        resolvedRunMvnDeps() ++
-          Seq(PathRef(compileClassesPath0.resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)))
+      def precomputedRunClasspath: T[Seq[String]] = Task {
+        resolvedRunMvnDeps().map(_.path.toString) ++
+          Seq(compileClassesPath0.toString)
       }
       def runClasspath = Task {
         super.runClasspath().filter { ref =>
@@ -214,9 +230,9 @@ object library extends Module {
         mvn"org.scala-lang:scala-library:${Versions.stdlibNonBootstrappedVersion}"
       )
       def sources = library.scala3Sources
-      def precomputedRunClasspath: T[Seq[PathRef]] = Task {
-        resolvedRunMvnDeps() ++
-          Seq(PathRef(compileClassesPath0.resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)))
+      def precomputedRunClasspath: T[Seq[String]] = Task {
+        resolvedRunMvnDeps().map(_.path.toString) ++
+          Seq(compileClassesPath0.toString)
       }
       def runClasspath = Task {
         super.runClasspath().filter(ref => !ref.path.startsWith(BuildCtx.workspaceRoot)) ++
@@ -235,8 +251,8 @@ object library extends Module {
         super.scalacOptions().filter(_ != "-Werror") ++
           Seq("-Yno-stdlib-patches")
 
-      def precomputedRunClasspath: T[Seq[PathRef]] = Task {
-        Seq(PathRef(compileClassesPath0.resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)))
+      def precomputedRunClasspath: T[Seq[String]] = Task {
+        Seq(compileClassesPath0.toString)
       }
       def runClasspath = Task {
         Seq(jar())
@@ -250,8 +266,8 @@ object library extends Module {
         // TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
         super.scalacOptions().filter(_ != "-Werror") ++
           Seq("-Yno-stdlib-patches")
-      def precomputedRunClasspath: T[Seq[PathRef]] = Task {
-        Seq(PathRef(compileClassesPath0.resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)))
+      def precomputedRunClasspath: T[Seq[String]] = Task {
+        Seq(compileClassesPath0.toString)
       }
       def runClasspath = Task {
         Seq(jar())
@@ -511,7 +527,7 @@ object compiler extends Module {
         super.sources() ++ Seq(nonBootstrappedSources())
       }
 
-      object test extends CompilerTests {
+      trait CompilerTests0 extends CompilerTests {
         def moduleDeps = super.moduleDeps ++ Seq(
           `test-helpers`.hybrid.bootstrapping
         )
@@ -520,6 +536,10 @@ object compiler extends Module {
           "--exclude-tags=BootstrappedOnly"
         )
       }
+      object test extends CompilerTests0
+      object munit extends CompilerTests0 {
+        def useMunit = true
+      }
     }
     object `final` extends Compiler with Hybrid {
       def moduleDeps = super.moduleDeps ++ Seq(
@@ -527,11 +547,15 @@ object compiler extends Module {
         tasty.hybrid.`final`
       )
 
-      object test extends CompilerTests {
+      trait CompilerTests0 extends CompilerTests {
         def moduleDeps = super.moduleDeps ++ Seq(
           `test-helpers`.hybrid.`final`
         )
         def libraryClassPath = library.hybrid.`final`.runClasspath()
+      }
+      object test extends CompilerTests0
+      object munit extends CompilerTests0 {
+        def useMunit = true
       }
     }
   }
@@ -543,7 +567,7 @@ object compiler extends Module {
       )
       def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
 
-      object test extends CompilerTests {
+      trait CompilerTests0 extends CompilerTests {
         def moduleDeps = super.moduleDeps ++ Seq(
           `test-helpers`.pure.bootstrapping
         )
@@ -553,6 +577,10 @@ object compiler extends Module {
           "--exclude-tags=BootstrappedOnly"
         )
       }
+      object test extends CompilerTests0
+      object munit extends CompilerTests0 {
+        def useMunit = true
+      }
     }
     object `final` extends Compiler with Pure {
       def moduleDeps = super.moduleDeps ++ Seq(
@@ -561,12 +589,16 @@ object compiler extends Module {
       )
       def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
 
-      object test extends CompilerTests {
+      trait CompilerTests0 extends CompilerTests {
         def moduleDeps = super.moduleDeps ++ Seq(
           `test-helpers`.pure.`final`
         )
         def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
         def libraryClassPath = library.pure.`final`.runClasspath()
+      }
+      object test extends CompilerTests0
+      object munit extends CompilerTests0 {
+        def useMunit = true
       }
     }
   }
@@ -706,7 +738,7 @@ object scaladoc extends Module {
     def mainClass = Some("dotty.tools.scaladoc.Main")
 
     def scaladocTestcasesCompile: T[mill.javalib.api.CompilationResult]
-    def scaladocTestcasesCompileClassesPath: T[mill.javalib.UnresolvedPath]
+    def scaladocTestcasesCompileClassesPath: os.Path
     def buildInfoTestSources = Task {
       val dir = Task.dest
       val tq = "\"\"\""
@@ -715,7 +747,7 @@ object scaladoc extends Module {
         s"""package dotty.tools.scaladoc.test
            |
            |object BuildInfo {
-           |  def test_testcasesOutputDir: Seq[String] = Seq($tq${scaladocTestcasesCompileClassesPath().resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)}$tq)
+           |  def test_testcasesOutputDir: Seq[String] = Seq($tq$scaladocTestcasesCompileClassesPath$tq)
            |  def test_testcasesSourceRoot: String = $tq${`scaladoc-testcases`.src().path}$tq
            |  def testDocumentationRoot: String = $tq${`test-documentations`().path}$tq
            |}
@@ -731,7 +763,7 @@ object scaladoc extends Module {
         // Ensure scaladoc-testcases is compiled, so that the directory
         // we refer to via scaladocTestcasesCompileClassesPath exists
         val fromCompile = scaladocTestcasesCompile().classes.path
-        val beforeCompile = scaladocTestcasesCompileClassesPath().resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)
+        val beforeCompile = scaladocTestcasesCompileClassesPath
         if (fromCompile != beforeCompile)
           System.err.println(
             "Warning: scaladoc-testcases compilation output dir calculation mismatch: " +
@@ -827,7 +859,7 @@ object `presentation-compiler` extends CoursierModule {
 
   trait PresentationCompiler extends Scala3Module {
 
-    def libraryPrecomputedRunClasspath: T[Seq[PathRef]] = Task(Nil)
+    def libraryPrecomputedRunClasspath: T[Seq[String]] = Task(Nil)
     def libraryRunClasspath: T[Seq[PathRef]]
 
     def buildInfoSources = Task {
@@ -870,7 +902,7 @@ object `presentation-compiler` extends CoursierModule {
         val dir = Task.dest
         val tq = "\"\"\""
         // TODO Add scala3-presentation-compiler-testcases cp too
-        val testDepCp = libraryPrecomputedRunClasspath().map(_.path)
+        val testDepCp = libraryPrecomputedRunClasspath()
         os.write(
           dir / "dotty/tools/pc/tests/buildinfo/BuildInfo.scala",
           s"""package dotty.tools.pc.tests.buildinfo
@@ -892,8 +924,8 @@ object `presentation-compiler` extends CoursierModule {
       )
 
       def runClasspath = Task {
-        val precomputed = libraryPrecomputedRunClasspath().filter(ref => os.exists(ref.path))
-        val actual = libraryRunClasspath().filter(ref => os.exists(ref.path))
+        val precomputed = libraryPrecomputedRunClasspath().map(os.Path(_)).filter(os.exists)
+        val actual = libraryRunClasspath().map(_.path).filter(os.exists)
         if (precomputed != actual)
           System.err.println(
             "Warning: standard library class path calculation mismatch: " +
@@ -909,7 +941,7 @@ object `presentation-compiler` extends CoursierModule {
       def moduleDeps = Seq(
         compiler.hybrid.bootstrapping
       )
-      def libraryPrecomputedRunClasspath = library.hybrid.bootstrapping.precomputedRunClasspath()
+      def libraryPrecomputedRunClasspath = library.hybrid.bootstrapping.precomputedRunClasspath
       def libraryRunClasspath = library.hybrid.bootstrapping.runClasspath().filter(ref => os.exists(ref.path))
       object test extends PresentationCompilerTests
     }
@@ -917,6 +949,7 @@ object `presentation-compiler` extends CoursierModule {
       def moduleDeps = Seq(
         compiler.hybrid.`final`
       )
+      def libraryPrecomputedRunClasspath = library.hybrid.`final`.precomputedRunClasspath
       def libraryRunClasspath = library.hybrid.`final`.runClasspath().filter(ref => os.exists(ref.path))
       object test extends PresentationCompilerTests
     }
@@ -926,6 +959,7 @@ object `presentation-compiler` extends CoursierModule {
       def moduleDeps = Seq(
         compiler.pure.bootstrapping
       )
+      def libraryPrecomputedRunClasspath = library.pure.bootstrapping.precomputedRunClasspath
       def libraryRunClasspath = library.pure.bootstrapping.runClasspath().filter(ref => os.exists(ref.path))
       object test extends PresentationCompilerTests
     }
@@ -933,6 +967,7 @@ object `presentation-compiler` extends CoursierModule {
       def moduleDeps = Seq(
         compiler.pure.`final`
       )
+      def libraryPrecomputedRunClasspath = library.pure.`final`.precomputedRunClasspath
       def libraryRunClasspath = library.pure.`final`.runClasspath().filter(ref => os.exists(ref.path))
       object test extends PresentationCompilerTests
     }
