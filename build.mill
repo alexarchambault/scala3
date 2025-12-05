@@ -74,9 +74,38 @@ trait Scala3JavaModule extends JavaModule with PublishModule with Mima {
 }
 
 trait Scala3Module extends Scala3JavaModule with ScalaModule { outer =>
+  def isHybrid: Boolean = false
+  def isBootstrapping: Boolean = false
+
+  def scalaVersion =
+    if (isBootstrapping) Versions.referenceVersion
+    else Versions.dottyVersion
+
   def scalaLibraryMvnDeps = Nil
-  def customScalaCompilerClasspath: T[Seq[PathRef]]
-  final def scalaCompilerClasspath = customScalaCompilerClasspath
+  def scalaCompilerClasspath =
+    if (isBootstrapping)
+      Task {
+        defaultResolver().classpath(
+          Seq(mvn"org.scala-lang:scala3-compiler_3:${Versions.referenceVersion}")
+        )
+      }
+    else
+      if (isHybrid) compiler(KindLevel(Kind.Hybrid, Level.Bootstrapping)).runClasspathAsJars
+      else compiler(KindLevel(Kind.Pure, Level.Bootstrapping)).runClasspathAsJars
+
+  def scalaCompilerBridge =
+    if (isBootstrapping)
+      Task(None)
+    else
+      if (isHybrid)
+        Task {
+          Some(`sbt-bridge`(KindLevel(Kind.Hybrid, Level.Bootstrapping)).jar())
+        }
+      else
+        Task {
+          Some(`sbt-bridge`(KindLevel(Kind.Pure, Level.Bootstrapping)).jar())
+        }
+
   def scalacOptions = super.scalacOptions() ++ Seq(
     "-feature",
     "-deprecation",
@@ -93,286 +122,162 @@ trait Scala3Module extends Scala3JavaModule with ScalaModule { outer =>
     def scalaLibraryMvnDeps = outer.scalaLibraryMvnDeps
     def scalaCompilerClasspath = outer.scalaCompilerClasspath
   }
+
+  def scalaInternalKeepScala2Library = isHybrid && !isBootstrapping
+  def enableBsp = isBootstrapping || enableBspForFinalModules
+}
+
+trait CrossScala3Module extends Cross.Module[KindLevel] with Scala3Module {
+  def isHybrid = crossValue.isHybrid
+  def isBootstrapping = crossValue.isBootstrapping
 }
 
 object interfaces extends Scala3JavaModule
 
-trait Bootstrapping extends Scala3Module {
-  def scalaVersion = Versions.referenceVersion
-  def customScalaCompilerClasspath = Task {
-    defaultResolver().classpath(
-      Seq(mvn"org.scala-lang:scala3-compiler_3:${Versions.referenceVersion}")
+trait SbtBridge extends CrossScala3Module {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    compiler(crossValue)
+  )
+  def sources = Task.Sources("src")
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"org.scala-sbt:compiler-interface:1.10.7"
+  )
+}
+
+object `sbt-bridge` extends Cross[SbtBridge](KindLevel.allValues)
+
+trait Library extends CrossScala3Module with mill.scala3build.CompileClassesPathHelper {
+  def scalacOptions = Task {
+    val sharedOptions = Seq(
+      "-sourcepath", sources().map(_.path).distinct.mkString(File.pathSeparator),
+      "-Yexplicit-nulls"
     )
-  }
-  def scalaCompilerBridge = None
-}
-
-trait Hybrid extends Scala3Module {
-  def scalaVersion = Versions.dottyVersion
-  def customScalaCompilerClasspath =
-    compiler.hybrid.bootstrapping.runClasspathAsJars
-  def scalaCompilerBridge = Task {
-    Some(`sbt-bridge`.hybrid.bootstrapping.jar())
-  }
-  def scalaInternalKeepScala2Library = true
-  def enableBsp = enableBspForFinalModules
-}
-
-trait Pure extends Scala3Module {
-  def scalaVersion = Versions.dottyVersion
-  def customScalaCompilerClasspath =
-    compiler.pure.bootstrapping.runClasspathAsJars
-  def scalaCompilerBridge = Task {
-    Some(`sbt-bridge`.pure.bootstrapping.jar())
-  }
-  def enableBsp = enableBspForFinalModules
-}
-
-object `sbt-bridge` extends Module {
-
-  def src = Task.Source("src")
-
-  trait SbtBridge extends Scala3JavaModule {
-    def sources = Task(Seq(`sbt-bridge`.src()))
-    def mvnDeps = super.mvnDeps() ++ Seq(
-      mvn"org.scala-sbt:compiler-interface:1.10.7"
-    )
+    if (isHybrid)
+      super.scalacOptions() ++ Seq("-Werror") ++ sharedOptions
+    else
+      // Original comment: TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
+      super.scalacOptions() ++
+        sharedOptions ++
+        Seq("-Yno-stdlib-patches")
   }
 
-  object hybrid extends Module {
-    object bootstrapping extends SbtBridge with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.hybrid.bootstrapping
-      )
-    }
-    object `final` extends SbtBridge with Hybrid {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.hybrid.`final`
-      )
-    }
+  def mvnDeps = super.mvnDeps() ++ {
+    if (isHybrid)
+      Seq(mvn"org.scala-lang:scala-library:${Versions.stdlibNonBootstrappedVersion}")
+    else
+      Nil
   }
-  object pure extends Module {
-    object bootstrapping extends SbtBridge with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.pure.bootstrapping
-      )
-    }
-    object `final` extends SbtBridge with Pure {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.pure.`final`
-      )
-    }
+
+  def baseSource = Task.Source("src")
+  def sources =
+    if (isHybrid)
+      Task {
+        val src0 = baseSource().path
+        os.walk(src0)
+          .filter(os.isFile)
+          .filter { f =>
+            f.last.endsWith(".scala") || {
+              f.last.endsWith(".java") && {
+                val subPath = f.subRelativeTo(src0)
+                subPath.startsWith(os.sub / "scala/annotation/internal") ||
+                subPath.startsWith(os.sub / "scala/runtime/function")
+              }
+            }
+          }
+          .filter(f => os.read.lines(f).forall(_.trim != "import scala.language.`2.13`"))
+          .map(PathRef(_))
+      }
+    else
+      Task(Seq(baseSource()))
+
+  def jar = Task {
+    val jar0 = super.jar()
+    val dest = Task.dest / s"scala-library-${Versions.dottyVersion}.jar"
+    os.copy(jar0.path, dest)
+    PathRef(dest)
   }
-}
 
-object library extends Module {
-
-  def src = Task.Source("src")
-
-  def scala3Sources = Task {
-    val src0 = src().path
-    os.walk(src0)
-      .filter(os.isFile)
-      .filter { f =>
-        f.last.endsWith(".scala") || {
-          f.last.endsWith(".java") && {
-            val subPath = f.subRelativeTo(src0)
-            subPath.startsWith(os.sub / "scala/annotation/internal") ||
-            subPath.startsWith(os.sub / "scala/runtime/function")
+  def runClasspath =
+    if (isHybrid)
+      if (isBootstrapping)
+        Task {
+          super.runClasspath().filter { ref =>
+            ref.path.startsWith(BuildCtx.workspaceRoot) ||
+              !ref.path.last.startsWith("scala3-library_3")
           }
         }
-      }
-      .filter(f => os.read.lines(f).forall(_.trim != "import scala.language.`2.13`"))
-      .map(PathRef(_))
-  }
-
-  trait Library extends Scala3Module with mill.scala3build.CompileClassesPathHelper {
-    def scalacOptions = super.scalacOptions() ++ Seq(
-      "-sourcepath", sources().map(_.path).distinct.mkString(File.pathSeparator),
-      "-Yexplicit-nulls",
-      "-Werror"
-    )
-    def jar = Task {
-      val jar0 = super.jar()
-      val dest = Task.dest / s"scala-library-${Versions.dottyVersion}.jar"
-      os.copy(jar0.path, dest)
-      PathRef(dest)
-    }
-
-    /*
-      TODO Add library-aux in source JAR?
-
-      (Compile / packageSrc / mappings) ++= {
-        val auxBase = (ThisBuild / baseDirectory).value / "library-aux/src"
-        auxBase ** "*.scala" pair io.Path.relativeTo(auxBase)
-      }
-
-    */
-  }
-
-  object hybrid extends Module {
-    object bootstrapping extends Library with Bootstrapping {
-      def mvnDeps = super.mvnDeps() ++ Seq(
-        mvn"org.scala-lang:scala-library:${Versions.stdlibNonBootstrappedVersion}"
-      )
-      def sources = library.scala3Sources
-      def precomputedRunClasspath: T[Seq[String]] = Task {
-        resolvedRunMvnDeps().map(_.path.toString) ++
-          Seq(compileClassesPath0.toString)
-      }
-      def runClasspath = Task {
-        super.runClasspath().filter { ref =>
-          ref.path.startsWith(BuildCtx.workspaceRoot) ||
-            !ref.path.last.startsWith("scala3-library_3")
+      else
+        Task {
+          super.runClasspath().filter(ref => !ref.path.startsWith(BuildCtx.workspaceRoot)) ++
+            Seq(jar())
         }
+    else
+      Task {
+        Seq(jar())
       }
-    }
-    object `final` extends Library with Hybrid {
-      def mvnDeps = super.mvnDeps() ++ Seq(
-        mvn"org.scala-lang:scala-library:${Versions.stdlibNonBootstrappedVersion}"
-      )
-      def sources = library.scala3Sources
-      def precomputedRunClasspath: T[Seq[String]] = Task {
+
+  def precomputedRunClasspath: T[Seq[String]] =
+    if (isHybrid)
+      Task {
         resolvedRunMvnDeps().map(_.path.toString) ++
           Seq(compileClassesPath0.toString)
       }
-      def runClasspath = Task {
-        super.runClasspath().filter(ref => !ref.path.startsWith(BuildCtx.workspaceRoot)) ++
-          Seq(jar())
-      }
-    }
-  }
-
-  object pure extends Module {
-    object bootstrapping extends Library with Bootstrapping {
-      def sources = Task {
-        Seq(library.src())
-      }
-      def scalacOptions =
-        // TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
-        super.scalacOptions().filter(_ != "-Werror") ++
-          Seq("-Yno-stdlib-patches")
-
-      def precomputedRunClasspath: T[Seq[String]] = Task {
+    else
+      Task {
         Seq(compileClassesPath0.toString)
       }
-      def runClasspath = Task {
-        Seq(jar())
-      }
+
+  /*
+    TODO Add library-aux in source JAR?
+
+    (Compile / packageSrc / mappings) ++= {
+      val auxBase = (ThisBuild / baseDirectory).value / "library-aux/src"
+      auxBase ** "*.scala" pair io.Path.relativeTo(auxBase)
     }
-    object `final` extends Library with Pure {
-      def sources = Task {
-        Seq(library.src())
-      }
-      def scalacOptions =
-        // TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
-        super.scalacOptions().filter(_ != "-Werror") ++
-          Seq("-Yno-stdlib-patches")
-      def precomputedRunClasspath: T[Seq[String]] = Task {
-        Seq(compileClassesPath0.toString)
-      }
-      def runClasspath = Task {
-        Seq(jar())
-      }
-    }
-  }
+
+  */
 }
 
-object tasty extends Module {
+object library extends Cross[Library](KindLevel.allValues)
+
+trait Tasty extends CrossScala3Module {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    library(crossValue) // why do we need an explicit crossValue here?
+  )
   def sources = Task.Sources("src")
-
-  trait Tasty extends Scala3Module {
-    def sources = tasty.sources
-    def scalacOptions = super.scalacOptions() ++ Seq(
-      "-source:3.0-migration"
-    )
-  }
-
-  object hybrid extends Module {
-    object bootstrapping extends Tasty with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(library.hybrid.bootstrapping)
-    }
-    object `final` extends Tasty with Hybrid {
-      def moduleDeps = super.moduleDeps ++ Seq(library.hybrid.`final`)
-    }
-  }
-  object pure extends Module {
-    object bootstrapping extends Tasty with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(library.pure.bootstrapping)
-      def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
-    }
-    object `final` extends Tasty with Pure {
-      def moduleDeps = super.moduleDeps ++ Seq(library.pure.`final`)
-      def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
-    }
+  def scalacOptions = super.scalacOptions() ++ {
+    val sharedOptions = Seq("-source:3.0-migration")
+    val extraOptions = if (isHybrid) Nil else Seq("-Yno-stdlib-patches")
+    sharedOptions ++ extraOptions
   }
 }
 
-object `test-helpers` extends Module {
-  def src = Task.Source("src")
-  trait TestHelpers extends Scala3Module {
-    def sources = Task {
-      Seq(src())
-    }
-    def mvnDeps = super.mvnDeps() ++ Seq(
-      mvn"org.junit.jupiter:junit-jupiter-api:${Versions.junitJupiter}"
-    )
-  }
-  object hybrid extends Module {
-    object bootstrapping extends TestHelpers with Bootstrapping {
-      def moduleDeps = Seq(
-        compiler.hybrid.bootstrapping
-      )
-    }
-    object `final` extends TestHelpers with Hybrid {
-      def moduleDeps = Seq(
-        compiler.hybrid.`final`
-      )
-    }
-  }
-  object pure extends Module {
-    object bootstrapping extends TestHelpers with Bootstrapping {
-      def moduleDeps = Seq(
-        compiler.pure.bootstrapping
-      )
-    }
-    object `final` extends TestHelpers with Pure {
-      def moduleDeps = Seq(
-        compiler.pure.`final`
-      )
-    }
-  }
+object tasty extends Cross[Tasty](KindLevel.allValues)
+
+trait TestHelpers extends CrossScala3Module {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    compiler(crossValue)
+  )
+  def sources = Task.Sources("src")
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"org.junit.jupiter:junit-jupiter-api:${Versions.junitJupiter}"
+  )
 }
 
-object compiler extends Module {
+object `test-helpers` extends Cross[TestHelpers](KindLevel.allValues)
+
+trait Compiler extends CrossScala3Module { outer =>
+  def moduleDeps = super.moduleDeps ++
+    Seq(
+      interfaces,
+      library(crossValue),
+      tasty(crossValue)
+    )
   def mainSources = Task.Source("src")
-  def sources = Task {
-    Seq(mainSources(), shadedSources())
-  }
   def nonBootstrappedSources = Task.Source("src-non-bootstrapped")
 
   def testSources = Task.Sources("test")
   def testResources = Task.Sources("test-resources")
-
-  def compilerPropertiesResources = Task(persistent = true) {
-    val file = Task.dest / "compiler.properties"
-    val dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss")
-    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"))
-    val contents =                //2.11.11.v20170413-090219-8a413ba7cc
-      s"""version.number=${interfaces.publishVersion()}
-         |maven.version.number=${interfaces.publishVersion()}
-         |git.hash=${VersionUtil.gitHash}
-         |copyright.string=Copyright 2002-${VersionUtil.currentYear}, LAMP/EPFL
-       """.stripMargin.getBytes(StandardCharsets.UTF_8)
-
-    if (os.isFile(file) && !Arrays.equals(os.read.bytes(file), contents))
-      os.write.over(file, contents)
-
-    for (f <- os.list(Task.dest) if f != file)
-      os.remove.all(f)
-
-    PathRef(Task.dest)
-  }
 
   def shadedSources = Task {
 
@@ -430,268 +335,178 @@ object compiler extends Module {
     PathRef(Task.dest)
   }
 
-  trait Compiler extends Scala3Module { outer =>
-    def moduleDeps = super.moduleDeps ++ Seq(interfaces)
-    def sources = compiler.sources
+  def sources = Task {
+    val extraSources =
+      if (isHybrid && isBootstrapping) Seq(nonBootstrappedSources()) else Nil
+    Seq(mainSources(), shadedSources()) ++ extraSources
+  }
+  def resources = Task {
+    super.resources() ++ Seq(compilerPropertiesResources())
+  }
+
+  def compilerPropertiesResources = Task(persistent = true) {
+    val file = Task.dest / "compiler.properties"
+    val dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss")
+    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"))
+    val contents =                //2.11.11.v20170413-090219-8a413ba7cc
+      s"""version.number=${interfaces.publishVersion()}
+         |maven.version.number=${interfaces.publishVersion()}
+         |git.hash=${VersionUtil.gitHash}
+         |copyright.string=Copyright 2002-${VersionUtil.currentYear}, LAMP/EPFL
+       """.stripMargin.getBytes(StandardCharsets.UTF_8)
+
+    if (os.isFile(file) && !Arrays.equals(os.read.bytes(file), contents))
+      os.write.over(file, contents)
+
+    for (f <- os.list(Task.dest) if f != file)
+      os.remove.all(f)
+
+    PathRef(Task.dest)
+  }
+
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"org.scala-lang.modules:scala-asm:9.8.0-scala-1", // used by the backend
+    mvn"org.scala-sbt:compiler-interface:1.10.7",
+    mvn"org.jline:jline-reader:3.29.0", // used by the REPL
+    mvn"org.jline:jline-terminal:3.29.0",
+    mvn"org.jline:jline-terminal-jni:3.29.0" // needed for Windows
+  )
+
+  def scalacOptions = Task {
+    val extraOptions = if (isHybrid) Nil else Seq("-Yno-stdlib-patches")
+    super.scalacOptions()
+      // TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
+      .filter(_ != "-Werror") ++
+    Seq(
+      // Note: bench/profiles/projects.yml should be updated accordingly.
+      "-Yexplicit-nulls",
+      "-Wsafe-init",
+
+      // Use source 3.3 to avoid fatal migration warnings on scalajs-ir
+      "-source", "3.3",
+
+      /* Ignore a deprecation warning about AnyRefMap in scalajs-ir. The latter
+       * cross-compiles for 2.12, and therefore AnyRefMap remains useful there
+       * for performance reasons.
+       * The build of Scala.js core does the same thing.
+       */
+      "-Wconf:cat=deprecation&origin=scala\\.collection\\.mutable\\.AnyRefMap.*:s",
+
+      // FIXME Mill: not added by sbt, but seems necessary for us here
+      "-experimental"
+    ) ++
+    extraOptions
+  }
+
+  def manifest = super.manifest().add(
+    "Git-Hash" -> VersionUtil.gitHash
+  )
+
+  def mainClass = Some("dotty.tools.dotc.Main")
+
+  trait CompilerTests extends Scala3Tests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      `test-helpers`(crossValue)
+    )
+    def testSources = outer.testSources
     def resources = Task {
-      super.resources() ++ Seq(compilerPropertiesResources())
+      super.resources() ++ outer.testResources()
     }
-
     def mvnDeps = super.mvnDeps() ++ Seq(
-      mvn"org.scala-lang.modules:scala-asm:9.8.0-scala-1", // used by the backend
-      mvn"org.scala-sbt:compiler-interface:1.10.7",
-      mvn"org.jline:jline-reader:3.29.0", // used by the REPL
-      mvn"org.jline:jline-terminal:3.29.0",
-      mvn"org.jline:jline-terminal-jni:3.29.0" // needed for Windows
+      mvn"io.get-coursier:coursier_2.13:2.0.16".exclude(("org.scala-lang", "scala-library"))
     )
 
-    def scalacOptions =
-      super.scalacOptions()
-        // TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
-        .filter(_ != "-Werror") ++
-      Seq(
-        // Note: bench/profiles/projects.yml should be updated accordingly.
-        "-Yexplicit-nulls",
-        "-Wsafe-init",
+    def scalacOptions = Task {
+      val extraOptions = if (isHybrid) Nil else Seq("-Yno-stdlib-patches")
+      super.scalacOptions() ++ extraOptions
+    }
 
-        // Use source 3.3 to avoid fatal migration warnings on scalajs-ir
-        "-source", "3.3",
+    def testArgsDefault = Task {
+      val extraArgs = if (isBootstrapping) Seq("--exclude-tags=BootstrappedOnly") else Nil
+      super.testArgsDefault() ++
+        Seq("--listener=dotty.tools.ContextEscapeDetector") ++
+        extraArgs
+    }
+    def testSandboxWorkingDir = false
 
-        /* Ignore a deprecation warning about AnyRefMap in scalajs-ir. The latter
-         * cross-compiles for 2.12, and therefore AnyRefMap remains useful there
-         * for performance reasons.
-         * The build of Scala.js core does the same thing.
-         */
-        "-Wconf:cat=deprecation&origin=scala\\.collection\\.mutable\\.AnyRefMap.*:s",
+    def forkArgs: T[Seq[String]] = Task {
+      val compilerClassPath = outer.compileClasspath().map(_.path)
+      def artifactFor(moduleName: String): os.Path =
+        compilerClassPath
+          .iterator
+          .filter(os.isFile)
+          .filter(_.last.endsWith(".jar"))
+          .find(_.last.startsWith(moduleName + "-"))
+          .getOrElse {
+            sys.error(s"No JAR found for $moduleName in compiler class path $compilerClassPath")
+          }
 
-        // FIXME Mill: not added by sbt, but seems necessary for us here
-        "-experimental"
+      super.forkArgs() ++ Seq(
+        s"-Ddotty.tests.dottyCompilerManagedSources=${mainSources().path}",
+        s"-Ddotty.tests.classes.dottyInterfaces=${interfaces.jar().path}",
+        s"-Ddotty.tests.classes.dottyCompiler=${outer.jar().path}",
+        s"-Ddotty.tests.classes.tastyCore=${tasty(crossValue).jar().path}",
+        s"-Ddotty.tests.classes.compilerInterface=${artifactFor("compiler-interface")}",
+        s"-Ddotty.tests.classes.scalaLibrary=${library(crossValue).runClasspath().map(_.path).filter(os.exists).mkString(File.pathSeparator)}",
+        s"-Ddotty.tests.classes.scalaAsm=${artifactFor("scala-asm")}",
+        s"-Ddotty.tests.classes.jlineTerminal=${artifactFor("jline-terminal")}",
+        s"-Ddotty.tests.classes.jlineReader=${artifactFor("jline-reader")}",
+        s"-Ddotty.tools.dotc.semanticdb.test=${BuildCtx.workspaceRoot / "tests/semanticdb"}"
       )
+    }
 
-    def manifest = super.manifest().add(
-      "Git-Hash" -> VersionUtil.gitHash
-    )
-
-    def mainClass = Some("dotty.tools.dotc.Main")
-
-    trait CompilerTests extends Scala3Tests {
-      def testSources = compiler.testSources
-      def resources = Task {
-        super.resources() ++ compiler.testResources()
-      }
-      def mvnDeps = super.mvnDeps() ++ Seq(
-        mvn"io.get-coursier:coursier_2.13:2.0.16".exclude(("org.scala-lang", "scala-library"))
-      )
-
-      def testArgsDefault = super.testArgsDefault() ++ Seq(
-        "--listener=dotty.tools.ContextEscapeDetector"
-      )
-      def testSandboxWorkingDir = false
-
-      def libraryClassPath: T[Seq[PathRef]]
-
-      def forkArgs: T[Seq[String]] = Task {
-        val compilerClassPath = outer.compileClasspath().map(_.path)
-        def artifactFor(moduleName: String): os.Path =
-          compilerClassPath
-            .iterator
-            .filter(os.isFile)
-            .filter(_.last.endsWith(".jar"))
-            .find(_.last.startsWith(moduleName + "-"))
-            .getOrElse {
-              sys.error(s"No JAR found for $moduleName in compiler class path $compilerClassPath")
-            }
-
-        super.forkArgs() ++ Seq(
-          s"-Ddotty.tests.dottyCompilerManagedSources=${mainSources().path}",
-          s"-Ddotty.tests.classes.dottyInterfaces=${interfaces.jar().path}",
-          s"-Ddotty.tests.classes.dottyCompiler=${outer.jar().path}",
-          s"-Ddotty.tests.classes.tastyCore=${tasty.hybrid.bootstrapping.jar().path}",
-          s"-Ddotty.tests.classes.compilerInterface=${artifactFor("compiler-interface")}",
-          s"-Ddotty.tests.classes.scalaLibrary=${libraryClassPath().map(_.path).filter(os.exists).mkString(File.pathSeparator)}",
-          s"-Ddotty.tests.classes.scalaAsm=${artifactFor("scala-asm")}",
-          s"-Ddotty.tests.classes.jlineTerminal=${artifactFor("jline-terminal")}",
-          s"-Ddotty.tests.classes.jlineReader=${artifactFor("jline-reader")}",
-          s"-Ddotty.tools.dotc.semanticdb.test=${BuildCtx.workspaceRoot / "tests/semanticdb"}"
-        )
-      }
-
-      def runClasspath = Task {
-        // really necessary?
-        val (localCp, managedCp) = super.runClasspath().partition(_.path.startsWith(BuildCtx.workspaceRoot))
-        localCp ++ managedCp
-      }
+    def runClasspath = Task {
+      // really necessary?
+      val (localCp, managedCp) = super.runClasspath().partition(_.path.startsWith(BuildCtx.workspaceRoot))
+      localCp ++ managedCp
     }
   }
 
-  object hybrid extends Module {
-    object bootstrapping extends Compiler with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        library.hybrid.bootstrapping,
-        tasty.hybrid.bootstrapping
-      )
-      def sources = Task {
-        super.sources() ++ Seq(nonBootstrappedSources())
-      }
-
-      trait CompilerTests0 extends CompilerTests {
-        def moduleDeps = super.moduleDeps ++ Seq(
-          `test-helpers`.hybrid.bootstrapping
-        )
-        def libraryClassPath = library.hybrid.bootstrapping.runClasspath()
-        def testArgsDefault = super.testArgsDefault() ++ Seq(
-          "--exclude-tags=BootstrappedOnly"
-        )
-      }
-      object test extends CompilerTests0
-      object munit extends CompilerTests0 {
-        def useMunit = true
-      }
-    }
-    object `final` extends Compiler with Hybrid {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        library.hybrid.`final`,
-        tasty.hybrid.`final`
-      )
-
-      trait CompilerTests0 extends CompilerTests {
-        def moduleDeps = super.moduleDeps ++ Seq(
-          `test-helpers`.hybrid.`final`
-        )
-        def libraryClassPath = library.hybrid.`final`.runClasspath()
-      }
-      object test extends CompilerTests0
-      object munit extends CompilerTests0 {
-        def useMunit = true
-      }
-    }
-  }
-  object pure extends Module {
-    object bootstrapping extends Compiler with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        library.pure.bootstrapping,
-        tasty.pure.bootstrapping
-      )
-      def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
-
-      trait CompilerTests0 extends CompilerTests {
-        def moduleDeps = super.moduleDeps ++ Seq(
-          `test-helpers`.pure.bootstrapping
-        )
-        def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
-        def libraryClassPath = library.pure.bootstrapping.runClasspath()
-        def testArgsDefault = super.testArgsDefault() ++ Seq(
-          "--exclude-tags=BootstrappedOnly"
-        )
-      }
-      object test extends CompilerTests0
-      object munit extends CompilerTests0 {
-        def useMunit = true
-      }
-    }
-    object `final` extends Compiler with Pure {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        library.pure.`final`,
-        tasty.pure.`final`
-      )
-      def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
-
-      trait CompilerTests0 extends CompilerTests {
-        def moduleDeps = super.moduleDeps ++ Seq(
-          `test-helpers`.pure.`final`
-        )
-        def scalacOptions = super.scalacOptions() ++ Seq("-Yno-stdlib-patches")
-        def libraryClassPath = library.pure.`final`.runClasspath()
-      }
-      object test extends CompilerTests0
-      object munit extends CompilerTests0 {
-        def useMunit = true
-      }
-    }
+  object test extends CompilerTests
+  object munit extends CompilerTests {
+    def useMunit = true
   }
 }
 
-object staging extends Scala3Module with Hybrid {
-  def moduleDeps = Seq(compiler.pure.`final`)
+object compiler extends Cross[Compiler](KindLevel.allValues)
+
+object staging extends Scala3Module {
+  def isHybrid = true
+  def moduleDeps = Seq(compiler(KindLevel(Kind.Pure, Level.Final)))
   def scalacOptions = super.scalacOptions() ++
     // FIXME Not sure why we have to add this, it seems it's not added in the sbt build
     Seq("-experimental")
 }
 
-object `tasty-inspector` extends Module {
-  def src = Task.Source("src")
-
-  trait TastyInspector extends Scala3Module {
-    def sources = Task {
-      Seq(src())
-    }
-    def scalacOptions = super.scalacOptions() ++ Seq(
-      "-experimental"
-    )
-  }
-
-  object hybrid extends Module {
-    object bootstrapping extends TastyInspector with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.hybrid.bootstrapping
-      )
-    }
-    object `final` extends TastyInspector with Hybrid {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.hybrid.`final`
-      )
-    }
-  }
-  object pure extends Module {
-    object bootstrapping extends TastyInspector with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.pure.bootstrapping
-      )
-    }
-    object `final` extends TastyInspector with Pure {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.pure.`final`
-      )
-    }
-  }
+trait TastyInspector extends CrossScala3Module {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    compiler(crossValue)
+  )
+  def sources = Task.Sources("src")
+  def scalacOptions = super.scalacOptions() ++ Seq(
+    "-experimental"
+  )
 }
 
-object `scaladoc-testcases` extends Module {
-  def src = Task.Source("src")
+object `tasty-inspector` extends Cross[TastyInspector](KindLevel.allValues)
 
-  trait ScaladocTestcases extends Scala3Module with mill.scala3build.CompileClassesPathHelper {
-    def sources = Task {
-      Seq(src())
-    }
-  }
+trait ScaladocTestcases extends CrossScala3Module with mill.scala3build.CompileClassesPathHelper {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    compiler(crossValue)
+  )
+  def sources = Task(Seq(baseSources()))
 
-  object hybrid extends Module {
-    object bootstrapping extends ScaladocTestcases with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.hybrid.bootstrapping
-      )
-    }
-    object `final` extends ScaladocTestcases with Hybrid {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.hybrid.`final`
-      )
-    }
-  }
-  object pure extends Module {
-    object bootstrapping extends ScaladocTestcases with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.pure.bootstrapping
-      )
-    }
-    object `final` extends ScaladocTestcases with Pure {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.pure.`final`
-      )
-    }
-  }
+  def baseSources = Task.Source("src")
 }
 
-object scaladoc extends Module {
+object `scaladoc-testcases` extends Cross[ScaladocTestcases](KindLevel.allValues)
+
+trait Scaladoc extends CrossScala3Module { scaladoc =>
+  def moduleDeps = super.moduleDeps ++ Seq(
+    compiler(crossValue),
+    `tasty-inspector`(crossValue),
+  )
+
   def src = Task.Source("src")
   def testSrc = Task.Source("test")
 
@@ -715,131 +530,106 @@ object scaladoc extends Module {
     PathRef(dir)
   }
 
-  trait Scaladoc extends Scala3Module { scaladoc =>
-    def sources = Task {
-      Seq(src(), buildInfoSources())
-    }
-    def testSources = Task {
-      Seq(testSrc(), buildInfoTestSources())
-    }
-    def scalacOptions = super.scalacOptions() ++ Seq(
-      "-experimental"
-    )
-    def mvnDeps = super.mvnDeps() ++ Seq(
-      mvn"com.vladsch.flexmark:flexmark:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-util-ast:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-util-data:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-util-html:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-ext-anchorlink:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-ext-autolink:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-ext-emoji:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-ext-gfm-strikethrough:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-ext-gfm-tasklist:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-ext-wikilink:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-ext-tables:$flexmarkVersion",
-      mvn"com.vladsch.flexmark:flexmark-ext-yaml-front-matter:$flexmarkVersion",
-      mvn"nl.big-o:liqp:0.8.2",
-      mvn"org.jsoup:jsoup:1.17.2", // Original comment: Needed to process .html files for static site
-      mvn"com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion"
-    )
-    def mainClass = Some("dotty.tools.scaladoc.Main")
+  def sources = Task {
+    Seq(src(), buildInfoSources())
+  }
+  def testSources = Task {
+    Seq(testSrc(), buildInfoTestSources())
+  }
+  def scalacOptions = super.scalacOptions() ++ Seq(
+    "-experimental"
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"com.vladsch.flexmark:flexmark:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-util-ast:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-util-data:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-util-html:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-ext-anchorlink:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-ext-autolink:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-ext-emoji:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-ext-gfm-strikethrough:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-ext-gfm-tasklist:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-ext-wikilink:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-ext-tables:$flexmarkVersion",
+    mvn"com.vladsch.flexmark:flexmark-ext-yaml-front-matter:$flexmarkVersion",
+    mvn"nl.big-o:liqp:0.8.2",
+    mvn"org.jsoup:jsoup:1.17.2", // Original comment: Needed to process .html files for static site
+    mvn"com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion"
+  )
+  def mainClass = Some("dotty.tools.scaladoc.Main")
 
-    def scaladocTestcasesCompile: T[mill.javalib.api.CompilationResult]
-    def scaladocTestcasesCompileClassesPath: os.Path
-    def buildInfoTestSources = Task {
-      val dir = Task.dest
-      val tq = "\"\"\""
-      os.write(
-        dir / "dotty/tools/scaladoc/test/BuildInfo.scala",
-        s"""package dotty.tools.scaladoc.test
-           |
-           |object BuildInfo {
-           |  def test_testcasesOutputDir: Seq[String] = Seq($tq$scaladocTestcasesCompileClassesPath$tq)
-           |  def test_testcasesSourceRoot: String = $tq${`scaladoc-testcases`.src().path}$tq
-           |  def testDocumentationRoot: String = $tq${`test-documentations`().path}$tq
-           |}
-           |""".stripMargin,
-        createFolders = true
-      )
-      PathRef(dir)
-    }
-
-    trait ScaladocTests extends Scala3Tests with Scala3Module {
-      def testSources = scaladoc.testSources
-      def runClasspath = Task {
-        // Ensure scaladoc-testcases is compiled, so that the directory
-        // we refer to via scaladocTestcasesCompileClassesPath exists
-        val fromCompile = scaladocTestcasesCompile().classes.path
-        val beforeCompile = scaladocTestcasesCompileClassesPath
-        if (fromCompile != beforeCompile)
-          System.err.println(
-            "Warning: scaladoc-testcases compilation output dir calculation mismatch: " +
-            s"pre-computed value $beforeCompile differs from actual value $fromCompile."
-          )
-        super.runClasspath()
-      }
-    }
+  def scaladocTestcasesCompile: T[mill.javalib.api.CompilationResult] =
+    `scaladoc-testcases`(crossValue).compile
+  def scaladocTestcasesCompileClassesPath: os.Path =
+    `scaladoc-testcases`(crossValue).compileClassesPath0
+  def buildInfoTestSources = Task {
+    val dir = Task.dest
+    val tq = "\"\"\""
+    os.write(
+      dir / "dotty/tools/scaladoc/test/BuildInfo.scala",
+      s"""package dotty.tools.scaladoc.test
+         |
+         |object BuildInfo {
+         |  def test_testcasesOutputDir: Seq[String] = Seq($tq$scaladocTestcasesCompileClassesPath$tq)
+         |  def test_testcasesSourceRoot: String = $tq${`scaladoc-testcases`(crossValue).baseSources().path}$tq
+         |  def testDocumentationRoot: String = $tq${`test-documentations`().path}$tq
+         |}
+         |""".stripMargin,
+      createFolders = true
+    )
+    PathRef(dir)
   }
 
-  object hybrid extends Module {
-    object bootstrapping extends Scaladoc with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.hybrid.bootstrapping,
-        `tasty-inspector`.hybrid.bootstrapping
-      )
-      def scaladocTestcasesCompile = `scaladoc-testcases`.hybrid.bootstrapping.compile
-      def scaladocTestcasesCompileClassesPath = `scaladoc-testcases`.hybrid.bootstrapping.compileClassesPath0
-      object test extends ScaladocTests with Bootstrapping {
-        def moduleDeps = super.moduleDeps ++ Seq(
-          `test-helpers`.hybrid.bootstrapping
+  object test extends Scala3Tests { // with Scala3Module {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      `test-helpers`(crossValue)
+    )
+    def testSources = scaladoc.testSources
+    def runClasspath = Task {
+      // Ensure scaladoc-testcases is compiled, so that the directory
+      // we refer to via scaladocTestcasesCompileClassesPath exists
+      val fromCompile = scaladocTestcasesCompile().classes.path
+      val beforeCompile = scaladocTestcasesCompileClassesPath
+      if (fromCompile != beforeCompile)
+        System.err.println(
+          "Warning: scaladoc-testcases compilation output dir calculation mismatch: " +
+          s"pre-computed value $beforeCompile differs from actual value $fromCompile."
         )
-      }
-    }
-    object `final` extends Scaladoc with Hybrid {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.hybrid.`final`,
-        `tasty-inspector`.hybrid.`final`
-      )
-      def scaladocTestcasesCompile = `scaladoc-testcases`.hybrid.`final`.compile
-      def scaladocTestcasesCompileClassesPath = `scaladoc-testcases`.hybrid.`final`.compileClassesPath0
-      object test extends ScaladocTests with Hybrid {
-        def moduleDeps = super.moduleDeps ++ Seq(
-          `test-helpers`.hybrid.`final`
-        )
-      }
-    }
-  }
-  object pure extends Module {
-    object bootstrapping extends Scaladoc with Bootstrapping {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.pure.bootstrapping,
-        `tasty-inspector`.pure.bootstrapping
-      )
-      def scaladocTestcasesCompile = `scaladoc-testcases`.pure.bootstrapping.compile
-      def scaladocTestcasesCompileClassesPath = `scaladoc-testcases`.pure.bootstrapping.compileClassesPath0
-      object test extends ScaladocTests with Bootstrapping {
-        def moduleDeps = super.moduleDeps ++ Seq(
-          `test-helpers`.pure.bootstrapping
-        )
-      }
-    }
-    object `final` extends Scaladoc with Pure {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        compiler.pure.`final`,
-        `tasty-inspector`.pure.`final`
-      )
-      def scaladocTestcasesCompile = `scaladoc-testcases`.pure.`final`.compile
-      def scaladocTestcasesCompileClassesPath = `scaladoc-testcases`.pure.`final`.compileClassesPath0
-      object test extends ScaladocTests with Pure {
-        def moduleDeps = super.moduleDeps ++ Seq(
-          `test-helpers`.pure.`final`
-        )
-      }
+      super.runClasspath()
     }
   }
 }
 
-object `presentation-compiler` extends CoursierModule {
+object scaladoc extends Cross[Scaladoc](KindLevel.allValues)
+
+trait PresentationCompiler extends CrossScala3Module {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    compiler(crossValue)
+  )
+
+  def libraryPrecomputedRunClasspath: T[Seq[String]] =
+    library(crossValue).precomputedRunClasspath
+  def libraryRunClasspath: T[Seq[PathRef]] =
+    Task {
+      library(crossValue)
+        .runClasspath()
+        .filter(ref => os.exists(ref.path))
+    }
+
+  def buildInfoSources = Task {
+    val dir = Task.dest
+    os.write(
+      dir / "dotty/tools/pc/buildinfo/BuildInfo.scala",
+      s"""package dotty.tools.pc.buildinfo
+         |
+         |object BuildInfo {
+         |  def scalaVersion = "${scalaVersion()}"
+         |}
+         |""".stripMargin,
+      createFolders = true
+    )
+    PathRef(dir)
+  }
 
   def mtagsVersion = "1.6.2"
 
@@ -864,19 +654,41 @@ object `presentation-compiler` extends CoursierModule {
     PathRef(Task.dest)
   }
 
-  trait PresentationCompiler extends Scala3Module {
+  def sources = Task {
+    Seq(src(), mtagsSharedSources(), buildInfoSources())
+  }
 
-    def libraryPrecomputedRunClasspath: T[Seq[String]] = Task(Nil)
-    def libraryRunClasspath: T[Seq[PathRef]]
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"org.lz4:lz4-java:1.8.0",
+    mvn"io.get-coursier:interface:1.0.18",
+    mvn"org.scalameta:mtags-interfaces:$mtagsVersion",
+    mvn"com.google.guava:guava:33.2.1-jre"
+  )
+  def scalacOptions = super.scalacOptions() ++ Seq(
+    "-source", "3.3", // Original comment: To avoid fatal migration warnings
+    "-Yexplicit-nulls", "-Wsafe-init",
+    "-experimental" // not needed in sbt, not sure why we need it here
+  )
 
-    def buildInfoSources = Task {
+  object test extends Scala3Tests {
+    def testSources = Task {
+      Seq(testSrc(), testBuildInfoSources())
+    }
+
+    def testBuildInfoSources = Task {
       val dir = Task.dest
+      val tq = "\"\"\""
+      // TODO Add scala3-presentation-compiler-testcases cp too
+      val testDepCp = libraryPrecomputedRunClasspath()
       os.write(
-        dir / "dotty/tools/pc/buildinfo/BuildInfo.scala",
-        s"""package dotty.tools.pc.buildinfo
+        dir / "dotty/tools/pc/tests/buildinfo/BuildInfo.scala",
+        s"""package dotty.tools.pc.tests.buildinfo
+           |
+           |import java.io.File
            |
            |object BuildInfo {
            |  def scalaVersion = "${scalaVersion()}"
+           |  def ideTestsDependencyClasspath = ${testDepCp.map(p => s"new File($tq$p$tq)").mkString("Seq[File](", ", ", ")")}
            |}
            |""".stripMargin,
         createFolders = true
@@ -884,102 +696,24 @@ object `presentation-compiler` extends CoursierModule {
       PathRef(dir)
     }
 
-    def sources = Task {
-      Seq(`presentation-compiler`.src(), mtagsSharedSources(), buildInfoSources())
-    }
-
     def mvnDeps = super.mvnDeps() ++ Seq(
-      mvn"org.lz4:lz4-java:1.8.0",
-      mvn"io.get-coursier:interface:1.0.18",
-      mvn"org.scalameta:mtags-interfaces:$mtagsVersion",
-      mvn"com.google.guava:guava:33.2.1-jre"
-    )
-    def scalacOptions = super.scalacOptions() ++ Seq(
-      "-source", "3.3", // Original comment: To avoid fatal migration warnings
-      "-Yexplicit-nulls", "-Wsafe-init",
-      "-experimental" // not needed in sbt, not sure why we need it here
+      mvn"org.hamcrest:hamcrest-core:1.3"
     )
 
-    trait PresentationCompilerTests extends Scala3Tests {
-      def testSources = Task {
-        Seq(`presentation-compiler`.testSrc(), testBuildInfoSources())
-      }
-
-      def testBuildInfoSources = Task {
-        val dir = Task.dest
-        val tq = "\"\"\""
-        // TODO Add scala3-presentation-compiler-testcases cp too
-        val testDepCp = libraryPrecomputedRunClasspath()
-        os.write(
-          dir / "dotty/tools/pc/tests/buildinfo/BuildInfo.scala",
-          s"""package dotty.tools.pc.tests.buildinfo
-             |
-             |import java.io.File
-             |
-             |object BuildInfo {
-             |  def scalaVersion = "${scalaVersion()}"
-             |  def ideTestsDependencyClasspath = ${testDepCp.map(p => s"new File($tq$p$tq)").mkString("Seq[File](", ", ", ")")}
-             |}
-             |""".stripMargin,
-          createFolders = true
+    def runClasspath = Task {
+      val precomputed = libraryPrecomputedRunClasspath().map(os.Path(_)).filter(os.exists)
+      val actual = libraryRunClasspath().map(_.path).filter(os.exists)
+      if (precomputed != actual)
+        System.err.println(
+          "Warning: standard library class path calculation mismatch: " +
+          s"pre-computed value $precomputed differs from actual value $actual."
         )
-        PathRef(dir)
-      }
-
-      def mvnDeps = super.mvnDeps() ++ Seq(
-        mvn"org.hamcrest:hamcrest-core:1.3"
-      )
-
-      def runClasspath = Task {
-        val precomputed = libraryPrecomputedRunClasspath().map(os.Path(_)).filter(os.exists)
-        val actual = libraryRunClasspath().map(_.path).filter(os.exists)
-        if (precomputed != actual)
-          System.err.println(
-            "Warning: standard library class path calculation mismatch: " +
-            s"pre-computed value $precomputed differs from actual value $actual."
-          )
-        super.runClasspath()
-      }
-    }
-  }
-
-  object hybrid extends Module {
-    object bootstrapping extends PresentationCompiler with Bootstrapping {
-      def moduleDeps = Seq(
-        compiler.hybrid.bootstrapping
-      )
-      def libraryPrecomputedRunClasspath = library.hybrid.bootstrapping.precomputedRunClasspath
-      def libraryRunClasspath = library.hybrid.bootstrapping.runClasspath().filter(ref => os.exists(ref.path))
-      object test extends PresentationCompilerTests
-    }
-    object `final` extends PresentationCompiler with Hybrid {
-      def moduleDeps = Seq(
-        compiler.hybrid.`final`
-      )
-      def libraryPrecomputedRunClasspath = library.hybrid.`final`.precomputedRunClasspath
-      def libraryRunClasspath = library.hybrid.`final`.runClasspath().filter(ref => os.exists(ref.path))
-      object test extends PresentationCompilerTests
-    }
-  }
-  object pure extends Module {
-    object bootstrapping extends PresentationCompiler with Bootstrapping {
-      def moduleDeps = Seq(
-        compiler.pure.bootstrapping
-      )
-      def libraryPrecomputedRunClasspath = library.pure.bootstrapping.precomputedRunClasspath
-      def libraryRunClasspath = library.pure.bootstrapping.runClasspath().filter(ref => os.exists(ref.path))
-      object test extends PresentationCompilerTests
-    }
-    object `final` extends PresentationCompiler with Pure {
-      def moduleDeps = Seq(
-        compiler.pure.`final`
-      )
-      def libraryPrecomputedRunClasspath = library.pure.`final`.precomputedRunClasspath
-      def libraryRunClasspath = library.pure.`final`.runClasspath().filter(ref => os.exists(ref.path))
-      object test extends PresentationCompilerTests
+      super.runClasspath()
     }
   }
 }
+
+object `presentation-compiler` extends Cross[PresentationCompiler](KindLevel.allValues)
 
 object ci extends Module {
   def noEmptySources(tasks: mill.util.Tasks[Seq[PathRef]]) = Task.Command[Unit] {
