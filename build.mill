@@ -580,7 +580,7 @@ trait Scaladoc extends CrossScala3Module { scaladoc =>
     PathRef(dir)
   }
 
-  object test extends Scala3Tests { // with Scala3Module {
+  object test extends Scala3Tests {
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-helpers`(crossValue)
     )
