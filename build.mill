@@ -96,6 +96,7 @@ trait Hybrid extends Scala3Module {
   def scalaCompilerBridge = Task {
     Some(`sbt-bridge`.hybrid.bootstrapping.jar())
   }
+  def scalaInternalKeepScala2Library = true
   def enableBsp = enableBspForFinalModules
 }
 
@@ -167,12 +168,18 @@ object library extends Module {
       .map(PathRef(_))
   }
 
-  trait Library extends Scala3Module {
+  trait Library extends Scala3Module with mill.scala3build.CompileClassesPathHelper {
     def scalacOptions = super.scalacOptions() ++ Seq(
       "-sourcepath", sources().map(_.path).distinct.mkString(File.pathSeparator),
       "-Yexplicit-nulls",
       "-Werror"
     )
+    def jar = Task {
+      val jar0 = super.jar()
+      val dest = Task.dest / s"scala-library-${Versions.dottyVersion}.jar"
+      os.copy(jar0.path, dest)
+      PathRef(dest)
+    }
 
     /*
       TODO Add library-aux in source JAR?
@@ -191,17 +198,15 @@ object library extends Module {
         mvn"org.scala-lang:scala-library:${Versions.stdlibNonBootstrappedVersion}"
       )
       def sources = library.scala3Sources
+      def precomputedRunClasspath: T[Seq[PathRef]] = Task {
+        resolvedRunMvnDeps() ++
+          Seq(PathRef(compileClassesPath0.resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)))
+      }
       def runClasspath = Task {
         super.runClasspath().filter { ref =>
           ref.path.startsWith(BuildCtx.workspaceRoot) ||
             !ref.path.last.startsWith("scala3-library_3")
         }
-      }
-      def jar = Task {
-        val jar0 = super.jar()
-        val dest = Task.dest / s"scala-library-${Versions.dottyVersion}.jar"
-        os.copy(jar0.path, dest)
-        PathRef(dest)
       }
     }
     object `final` extends Library with Hybrid {
@@ -209,6 +214,10 @@ object library extends Module {
         mvn"org.scala-lang:scala-library:${Versions.stdlibNonBootstrappedVersion}"
       )
       def sources = library.scala3Sources
+      def precomputedRunClasspath: T[Seq[PathRef]] = Task {
+        resolvedRunMvnDeps() ++
+          Seq(PathRef(compileClassesPath0.resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)))
+      }
       def runClasspath = Task {
         super.runClasspath().filter(ref => !ref.path.startsWith(BuildCtx.workspaceRoot)) ++
           Seq(jar())
@@ -226,11 +235,8 @@ object library extends Module {
         super.scalacOptions().filter(_ != "-Werror") ++
           Seq("-Yno-stdlib-patches")
 
-      def jar = Task {
-        val jar0 = super.jar()
-        val dest = Task.dest / s"scala-library-${Versions.dottyVersion}.jar"
-        os.copy(jar0.path, dest)
-        PathRef(dest)
+      def precomputedRunClasspath: T[Seq[PathRef]] = Task {
+        Seq(PathRef(compileClassesPath0.resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)))
       }
       def runClasspath = Task {
         Seq(jar())
@@ -244,6 +250,9 @@ object library extends Module {
         // TODO: Enable fatal warnings after 3.8 because old stdlib has different nullability.
         super.scalacOptions().filter(_ != "-Werror") ++
           Seq("-Yno-stdlib-patches")
+      def precomputedRunClasspath: T[Seq[PathRef]] = Task {
+        Seq(PathRef(compileClassesPath0.resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)))
+      }
       def runClasspath = Task {
         Seq(jar())
       }
@@ -721,7 +730,13 @@ object scaladoc extends Module {
       def runClasspath = Task {
         // Ensure scaladoc-testcases is compiled, so that the directory
         // we refer to via scaladocTestcasesCompileClassesPath exists
-        scaladocTestcasesCompile()
+        val fromCompile = scaladocTestcasesCompile().classes.path
+        val beforeCompile = scaladocTestcasesCompileClassesPath().resolve(BuildCtx.workspaceRoot / "out" /* FIXME */)
+        if (fromCompile != beforeCompile)
+          System.err.println(
+            "Warning: scaladoc-testcases compilation output dir calculation mismatch: " +
+            s"pre-computed value $beforeCompile differs from actual value $fromCompile."
+          )
         super.runClasspath()
       }
     }
@@ -812,6 +827,9 @@ object `presentation-compiler` extends CoursierModule {
 
   trait PresentationCompiler extends Scala3Module {
 
+    def libraryPrecomputedRunClasspath: T[Seq[PathRef]] = Task(Nil)
+    def libraryRunClasspath: T[Seq[PathRef]]
+
     def buildInfoSources = Task {
       val dir = Task.dest
       os.write(
@@ -820,27 +838,6 @@ object `presentation-compiler` extends CoursierModule {
            |
            |object BuildInfo {
            |  def scalaVersion = "${scalaVersion()}"
-           |}
-           |""".stripMargin,
-        createFolders = true
-      )
-      PathRef(dir)
-    }
-
-    def testBuildInfoSources = Task {
-      val dir = Task.dest
-      val tq = "\"\"\""
-      // TODO Add scala3-presentation-compiler-testcases cp too
-      val testDepCp = library.pure.`final`.runClasspath().map(_.path)
-      os.write(
-        dir / "dotty/tools/pc/tests/buildinfo/BuildInfo.scala",
-        s"""package dotty.tools.pc.tests.buildinfo
-           |
-           |import java.io.File
-           |
-           |object BuildInfo {
-           |  def scalaVersion = "${scalaVersion()}"
-           |  def ideTestsDependencyClasspath = ${testDepCp.map(p => s"new File($tq$p$tq)").mkString("Seq(", ", ", ")")}
            |}
            |""".stripMargin,
         createFolders = true
@@ -868,9 +865,42 @@ object `presentation-compiler` extends CoursierModule {
       def testSources = Task {
         Seq(`presentation-compiler`.testSrc(), testBuildInfoSources())
       }
+
+      def testBuildInfoSources = Task {
+        val dir = Task.dest
+        val tq = "\"\"\""
+        // TODO Add scala3-presentation-compiler-testcases cp too
+        val testDepCp = libraryPrecomputedRunClasspath().map(_.path)
+        os.write(
+          dir / "dotty/tools/pc/tests/buildinfo/BuildInfo.scala",
+          s"""package dotty.tools.pc.tests.buildinfo
+             |
+             |import java.io.File
+             |
+             |object BuildInfo {
+             |  def scalaVersion = "${scalaVersion()}"
+             |  def ideTestsDependencyClasspath = ${testDepCp.map(p => s"new File($tq$p$tq)").mkString("Seq[File](", ", ", ")")}
+             |}
+             |""".stripMargin,
+          createFolders = true
+        )
+        PathRef(dir)
+      }
+
       def mvnDeps = super.mvnDeps() ++ Seq(
         mvn"org.hamcrest:hamcrest-core:1.3"
       )
+
+      def runClasspath = Task {
+        val precomputed = libraryPrecomputedRunClasspath().filter(ref => os.exists(ref.path))
+        val actual = libraryRunClasspath().filter(ref => os.exists(ref.path))
+        if (precomputed != actual)
+          System.err.println(
+            "Warning: standard library class path calculation mismatch: " +
+            s"pre-computed value $precomputed differs from actual value $actual."
+          )
+        super.runClasspath()
+      }
     }
   }
 
@@ -879,12 +909,15 @@ object `presentation-compiler` extends CoursierModule {
       def moduleDeps = Seq(
         compiler.hybrid.bootstrapping
       )
+      def libraryPrecomputedRunClasspath = library.hybrid.bootstrapping.precomputedRunClasspath()
+      def libraryRunClasspath = library.hybrid.bootstrapping.runClasspath().filter(ref => os.exists(ref.path))
       object test extends PresentationCompilerTests
     }
     object `final` extends PresentationCompiler with Hybrid {
       def moduleDeps = Seq(
         compiler.hybrid.`final`
       )
+      def libraryRunClasspath = library.hybrid.`final`.runClasspath().filter(ref => os.exists(ref.path))
       object test extends PresentationCompilerTests
     }
   }
@@ -893,12 +926,14 @@ object `presentation-compiler` extends CoursierModule {
       def moduleDeps = Seq(
         compiler.pure.bootstrapping
       )
+      def libraryRunClasspath = library.pure.bootstrapping.runClasspath().filter(ref => os.exists(ref.path))
       object test extends PresentationCompilerTests
     }
     object `final` extends PresentationCompiler with Pure {
       def moduleDeps = Seq(
         compiler.pure.`final`
       )
+      def libraryRunClasspath = library.pure.`final`.runClasspath().filter(ref => os.exists(ref.path))
       object test extends PresentationCompilerTests
     }
   }
