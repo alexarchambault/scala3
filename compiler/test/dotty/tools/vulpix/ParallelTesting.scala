@@ -1428,10 +1428,23 @@ trait ParallelTesting extends RunnerOrchestration:
     targetDir
   }
 
+  def createOutputDirsForDir0(d: JFile, sourceDir: String, outDir: String): JFile = {
+    val targetDir = new JFile(outDir + s"$sourceDir/${d.getName}")
+    targetDir.mkdirs()
+    targetDir
+  }
+
   /** Create out directory for `file` */
   private def createOutputDirsForFile(file: JFile, sourceDir: JFile, outDir: String): JFile = {
     val uniqueSubdir = file.getName.substring(0, file.getName.lastIndexOf('.'))
     val targetDir = new JFile(outDir + s"${sourceDir.getName}${JFile.separatorChar}$uniqueSubdir")
+    targetDir.mkdirs()
+    targetDir
+  }
+
+  private def createOutputDirsForFile0(file: JFile, sourceDir: String, outDir: String): JFile = {
+    val uniqueSubdir = file.getName.replace(".", "-")
+    val targetDir = new JFile(outDir + s"$sourceDir${JFile.separatorChar}$uniqueSubdir")
     targetDir.mkdirs()
     targetDir
   }
@@ -1557,8 +1570,8 @@ trait ParallelTesting extends RunnerOrchestration:
       !isPicklerTest || source.compilationGroups.length == 1
     }
     val targets =
-      files.map(f => JointCompilationSource(testGroup.name, Array(f), flags, createOutputDirsForFile(f, sourceDir, outDir))) ++
-      dirs.map { dir => SeparateCompilationSource(testGroup.name, dir, flags, createOutputDirsForDir(dir, sourceDir, outDir)) }.filter(picklerDirFilter)
+      files.map(file => JointCompilationSource(testGroup.name, Array(file), flags, createOutputDirsForFile0(file, f, outDir))) ++
+      dirs.map { dir => SeparateCompilationSource(testGroup.name, dir, flags, createOutputDirsForDir0(dir, f, outDir)) }.filter(picklerDirFilter)
 
     // Create a CompilationTest and let the user decide whether to execute a pos or a neg test
     new CompilationTest(targets)
