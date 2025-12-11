@@ -483,10 +483,14 @@ extends ImplicitRunInfo, ConstraintRunInfo, cc.CaptureRunInfo {
     else
       val watchdog = new TimerTask:
         def run() = println(i"[compiling $units]")
+      val timer = Timer()
       try
-        new Timer().schedule(watchdog, printProgressPeriod, printProgressPeriod)
+        timer.schedule(watchdog, printProgressPeriod, printProgressPeriod)
         proc
-      finally watchdog.cancel()
+      finally {
+        watchdog.cancel()
+        timer.cancel()
+      }
 
   private sealed trait PrintedTree
   private /*final*/ case class SomePrintedTree(phase: String, tree: String) extends PrintedTree
