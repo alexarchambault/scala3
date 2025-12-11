@@ -35,6 +35,7 @@ class CompilationTests0 extends munit.FunSuite {
           testList += name0
         }
         test(name0) {
+          System.err.println(s"Running ${Console.BLUE}$name0${Console.RESET}")
           body()
         }
       }
