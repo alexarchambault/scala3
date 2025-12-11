@@ -56,8 +56,6 @@ class CompilationTests0 extends munit.FunSuite {
       compileFile("tests/pos-special/utf8encoded.scala", defaultOptions.and("-encoding", "UTF8")),
       compileFile("tests/pos-special/utf16encoded.scala", defaultOptions.and("-encoding", "UTF16")),
       compileDir("tests/pos-special/i18589", defaultOptions.and("-Wsafe-init").without("-Ycheck:all")),
-      // Run tests for legacy lazy vals
-      compileFilesInDir("tests/pos", defaultOptions.and("-Wsafe-init", "-Ylegacy-lazy-vals", "-Ycheck-constraint-deps"), FileFilter.include(TestSources.posLazyValsAllowlist)),
       compileDir("tests/pos-special/java-param-names", defaultOptions.withJavacOnlyOptions("-parameters")),
     ) ::: (
       // TODO create a folder for capture checking tests with the stdlib, or use tests/pos-custom-args/captures under this mode?
@@ -69,6 +67,13 @@ class CompilationTests0 extends munit.FunSuite {
       tests ::= compileFilesInDir("tests/pos-java16+", defaultOptions.and("-Wsafe-init"))
 
     aggregateTests(tests*).declareMunitTests("pos", _.checkCompile())
+  }
+
+  locally {
+    implicit val testGroup: TestGroup = TestGroup("compilePosLegacy")
+    // Run tests for legacy lazy vals
+    compileFilesInDir("tests/pos", defaultOptions.and("-Wsafe-init", "-Ylegacy-lazy-vals", "-Ycheck-constraint-deps"), FileFilter.include(TestSources.posLazyValsAllowlist))
+      .declareMunitTests("posLegacy", _.checkCompile())
   }
 
 
