@@ -42,7 +42,7 @@ class CompilationTests {
       compileDir("tests/pos-special/i18589", defaultOptions.and("-Wsafe-init").without("-Ycheck:all")),
       compileDir("tests/pos-special/i24547", defaultOptions.without("-Ycheck:all")),
       // Run tests for legacy lazy vals
-      compileFilesInDir("tests/pos", defaultOptions.and("-Wsafe-init", "-Ylegacy-lazy-vals", "-Ycheck-constraint-deps"), FileFilter.include(TestSources.posLazyValsAllowlist)),
+      compileFilesInDir("tests/pos", defaultOptions.and("-Wsafe-init", "-Ylegacy-lazy-vals", "-Ycheck-constraint-deps"), FileFilter.include(TestSources.posLazyValsAllowlist))(using TestGroup("compilePosLegacyLazyVals")),
       compileDir("tests/pos-special/java-param-names", defaultOptions.withJavacOnlyOptions("-parameters")),
     ) ::: (
       // TODO create a folder for capture checking tests with the stdlib, or use tests/pos-custom-args/captures under this mode?
@@ -176,7 +176,7 @@ class CompilationTests {
       compileFilesInDir("tests/run-deep-subtype", allowDeepSubtypes),
       compileFilesInDir("tests/run-custom-args/captures", allowDeepSubtypes.and("-language:experimental.captureChecking", "-language:experimental.separationChecking", "-source", "3.8")),
       // Run tests for legacy lazy vals.
-      compileFilesInDir("tests/run", defaultOptions.and("-Wsafe-init", "-Ylegacy-lazy-vals", "-Ycheck-constraint-deps"), FileFilter.include(TestSources.runLazyValsAllowlist)),
+      compileFilesInDir("tests/run", defaultOptions.and("-Wsafe-init", "-Ylegacy-lazy-vals", "-Ycheck-constraint-deps"), FileFilter.include(TestSources.runLazyValsAllowlist))(using TestGroup("runAllLegacyLazyVals")),
     ).dynamicTests(_.checkRuns())
   }
 
@@ -283,7 +283,7 @@ class CompilationTests {
   @Test def checkInitGlobalTastySource: Unit = {
     val group = TestGroup("checkInitGlobal/tastySource")
     val tastSourceOptions = defaultOptions.and("-Ysafe-init-global")
-    val outDirLib = defaultOutputDir + group + "/A/tastySource/A"
+    val outDirLib = defaultOutputDir + group + "/A/tastySource/A-scala"
 
     // Set -sourceroot such that the source code cannot be found by the compiler
     val libOptions = tastSourceOptions.and("-sourceroot", "tests/init-global/special")
@@ -311,13 +311,17 @@ class CompilationTests {
     val i12128 = DynamicTest.dynamicTest("i12128", () => {
       val i12128Group = TestGroup("checkInit/i12128")
       val i12128Options = options.without("-Werror")
-      val outDir1 = defaultOutputDir + i12128Group + "/Reflect_1/i12128/Reflect_1"
-      val outDir2 = defaultOutputDir + i12128Group + "/Macro_2/i12128/Macro_2"
+
+      val testReflect1 = compileFile("tests/init/special/i12128/Reflect_1.scala", i12128Options)(using i12128Group)
+      val outDir1 = testReflect1.targets.head.outDir.toString
+      val testMacro2 = compileFile("tests/init/special/i12128/Macro_2.scala", i12128Options.withClasspath(outDir1))(using i12128Group)
+      val outDir2 = testMacro2.targets.head.outDir.toString
+      val testTest3 = compileFile("tests/init/special/i12128/Test_3.scala", options.withClasspath(outDir2))(using i12128Group)
 
       val tests = List(
-        compileFile("tests/init/special/i12128/Reflect_1.scala", i12128Options)(using i12128Group),
-        compileFile("tests/init/special/i12128/Macro_2.scala", i12128Options.withClasspath(outDir1))(using i12128Group),
-        compileFile("tests/init/special/i12128/Test_3.scala", options.withClasspath(outDir2))(using i12128Group)
+        testReflect1,
+        testMacro2,
+        testTest3
       ).map(_.keepOutput.checkCompile())
 
       tests.foreach(_.delete())
@@ -331,14 +335,18 @@ class CompilationTests {
       val tastyErrorGroup = TestGroup("checkInit/tasty-error/val-or-defdef")
       val tastyErrorOptions = options.without("-Werror")
 
-      val classA0 = defaultOutputDir + tastyErrorGroup + "/A/v0/A"
-      val classA1 = defaultOutputDir + tastyErrorGroup + "/A/v1/A"
-      val classB1 = defaultOutputDir + tastyErrorGroup + "/B/v1/B"
+      val testA1 = compileFile("tests/init/tasty-error/val-or-defdef/v1/A.scala", tastyErrorOptions)(using tastyErrorGroup)
+      val classA1 = testA1.targets.head.outDir.toString
+      val testB1 = compileFile("tests/init/tasty-error/val-or-defdef/v1/B.scala", tastyErrorOptions.withClasspath(classA1))(using tastyErrorGroup)
+      val testA0 = compileFile("tests/init/tasty-error/val-or-defdef/v0/A.scala", tastyErrorOptions)(using tastyErrorGroup)
+
+      val classA0 = testA0.targets.head.outDir.toString
+      val classB1 = testB1.targets.head.outDir.toString
 
       val tests = List(
-        compileFile("tests/init/tasty-error/val-or-defdef/v1/A.scala", tastyErrorOptions)(using tastyErrorGroup),
-        compileFile("tests/init/tasty-error/val-or-defdef/v1/B.scala", tastyErrorOptions.withClasspath(classA1))(using tastyErrorGroup),
-        compileFile("tests/init/tasty-error/val-or-defdef/v0/A.scala", tastyErrorOptions)(using tastyErrorGroup),
+        testA1,
+        testB1,
+        testA0,
       ).map(_.keepOutput.checkCompile())
 
       compileFile("tests/init/tasty-error/val-or-defdef/Main.scala", tastyErrorOptions.withClasspath(classA0).withClasspath(classB1))(using tastyErrorGroup).checkExpectedErrors()
@@ -354,16 +362,21 @@ class CompilationTests {
       val tastyErrorGroup = TestGroup("checkInit/tasty-error/typedef")
       val tastyErrorOptions = options.without("-Werror").without("-Ycheck:all")
 
-      val classC = defaultOutputDir + tastyErrorGroup + "/C/typedef/C"
-      val classA0 = defaultOutputDir + tastyErrorGroup + "/A/v0/A"
-      val classA1 = defaultOutputDir + tastyErrorGroup + "/A/v1/A"
-      val classB1 = defaultOutputDir + tastyErrorGroup + "/B/v1/B"
+      val testC = compileFile("tests/init/tasty-error/typedef/C.scala", tastyErrorOptions)(using tastyErrorGroup)
+      val classC = testC.targets.head.outDir.toString
+      val testA0 = compileFile("tests/init/tasty-error/typedef/v0/A.scala", tastyErrorOptions.withClasspath(classC))(using tastyErrorGroup)
+      val testA1 = compileFile("tests/init/tasty-error/typedef/v1/A.scala", tastyErrorOptions.withClasspath(classC))(using tastyErrorGroup)
+      val classA1 = testA1.targets.head.outDir.toString
+      val testB1 = compileFile("tests/init/tasty-error/typedef/v1/B.scala", tastyErrorOptions.withClasspath(classC).withClasspath(classA1))(using tastyErrorGroup)
+
+      val classA0 = testA0.targets.head.outDir.toString
+      val classB1 = testB1.targets.head.outDir.toString
 
       val tests = List(
-        compileFile("tests/init/tasty-error/typedef/C.scala", tastyErrorOptions)(using tastyErrorGroup),
-        compileFile("tests/init/tasty-error/typedef/v1/A.scala", tastyErrorOptions.withClasspath(classC))(using tastyErrorGroup),
-        compileFile("tests/init/tasty-error/typedef/v1/B.scala", tastyErrorOptions.withClasspath(classC).withClasspath(classA1))(using tastyErrorGroup),
-        compileFile("tests/init/tasty-error/typedef/v0/A.scala", tastyErrorOptions.withClasspath(classC))(using tastyErrorGroup),
+        testC,
+        testA1,
+        testB1,
+        testA0,
       ).map(_.keepOutput.checkCompile())
 
       compileFile("tests/init/tasty-error/typedef/Main.scala", tastyErrorOptions.withClasspath(classC).withClasspath(classA0).withClasspath(classB1))(using tastyErrorGroup).checkExpectedErrors()

@@ -1435,7 +1435,7 @@ trait ParallelTesting extends RunnerOrchestration:
 
   /** Create out directory for `file` */
   private def createOutputDirsForFile(file: JFile, sourceDir: JFile, outDir: String): JFile = {
-    val uniqueSubdir = file.getName.substring(0, file.getName.lastIndexOf('.'))
+    val uniqueSubdir = file.getName.replace(".", "-")
     val targetDir = new JFile(outDir + s"${sourceDir.getName}${JFile.separatorChar}$uniqueSubdir")
     targetDir.mkdirs()
     targetDir
@@ -1506,7 +1506,7 @@ trait ParallelTesting extends RunnerOrchestration:
     }
 
     // Directories in which to compile all containing files with `flags`:
-    val targetDir = new JFile(outDir + JFile.separator + sourceDir.getName + JFile.separator)
+    val targetDir = new JFile(outDir + JFile.separator + f.replace("/", "_") + JFile.separator)
     targetDir.mkdirs()
 
     val target = JointCompilationSource(s"compiling '$f' in test '$testGroup'", randomized, flags, targetDir)
