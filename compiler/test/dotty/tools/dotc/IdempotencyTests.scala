@@ -11,6 +11,7 @@ import org.junit.jupiter.api.{util => _, *}
 
 import scala.concurrent.duration._
 import reporting.TestReporter
+import util.IdempotencyCheck
 import vulpix._
 
 
@@ -46,21 +47,22 @@ class IdempotencyTests {
       aggregateTests(tests*)
     }
 
-    def check(name: String) = {
-      val files = List(s"tests/idempotency/$name.scala", "tests/idempotency/IdempotencyCheck.scala")
-      compileList(name, files, defaultOptions)(using TestGroup("idempotency/check"))
-    }
-    val allChecks = aggregateTests(
-      check("CheckOrderIdempotency"),
-      // Disabled until strawman is fixed
-      // check("CheckStrawmanIdempotency"),
-      check("CheckPosIdempotency")
-    )
-
     val allTests = aggregateTests(orderIdempotency, posIdempotency)
 
     val tests = allTests.keepOutput.checkCompile()
-    allChecks.checkRuns()
+
+    IdempotencyCheck.checkIdempotency("out/idempotency/orderIdempotency1", "out/idempotency/orderIdempotency2")
+
+    // Disabled until strawman is fixed
+    // IdempotencyCheck.checkIdempotency("out/idempotency/strawman0", "out/idempotency/strawman1")
+    // FIXME: #2964 and maybe more
+    /*
+    IdempotencyCheck.checkIdempotency("out/idempotency/strawman1", "out/idempotency/strawman2")
+    IdempotencyCheck.checkIdempotency("out/idempotency/strawman1", "out/idempotency/strawman3")
+    */
+
+    IdempotencyCheck.checkIdempotency("out/idempotency/posIdempotency1", "out/idempotency/posIdempotency2")
+
     tests.delete()
   }
 

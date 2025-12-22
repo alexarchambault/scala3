@@ -14,6 +14,7 @@ import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 import scala.concurrent.duration._
 import TestSources.sources
+import util.IdempotencyCheck
 import vulpix._
 import reporting.TestReporter
 
@@ -97,7 +98,8 @@ class TastyBootstrapTests {
     assertExists(s"out/$tastyCoreGroup/tastyCore/")
     assertExists(s"out/$dotty1Group/dotty1/")
     assertExists(s"out/$dotty2Group/dotty2/")
-    compileList("idempotency", List("tests/idempotency/BootstrapChecker.scala", "tests/idempotency/IdempotencyCheck.scala"), defaultOptions).checkRuns()
+
+    IdempotencyCheck.checkIdempotency("out/tastyBootstrap/dotty1/dotty1", "out/tastyBootstrap/dotty2/dotty2")
 
     tests.foreach(_.delete())
   }

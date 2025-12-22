@@ -1,3 +1,4 @@
+package dotty.tools.dotc.util
 
 import java.io.File as JFile
 import java.nio.file.{ Files as JFiles, Path as JPath, Paths as JPaths }
