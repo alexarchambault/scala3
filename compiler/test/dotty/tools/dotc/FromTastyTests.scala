@@ -51,6 +51,8 @@ object FromTastyTests extends ParallelTesting {
   def updateCheckFiles: Boolean = Properties.testsUpdateCheckfile
   def failedTests = TestReporter.lastRunFailedTests
 
+  override def emptyTargetCheck = false
+
   implicit val summaryReport: SummaryReporting = new SummaryReport
   @AfterAll def tearDown(): Unit = {
     super.cleanup()

@@ -349,10 +349,51 @@ trait ParallelTesting extends RunnerOrchestration:
     }
   }
 
+  def emptyTargetCheck: Boolean =
+    true
+
+  protected trait TestSourceHandling {
+    def testSources: List[TestSource]
+
+    val filteredByName =
+      if (testFilter.isEmpty) testSources
+      else testSources.filter {
+        case JointCompilationSource(_, files, _, _, _, _) =>
+          testFilter.exists(filter => files.exists(file => file.getPath.contains(filter)))
+        case SeparateCompilationSource(_, dir, _, _) =>
+          testFilter.exists(dir.getPath.contains)
+      }
+
+    /** All testSources left after filtering out */
+    val filteredSources =
+      filteredByName.filterNot(shouldSkipTestSource(_)).filter(shouldReRun(_))
+
+    /** Total amount of test sources being compiled by this test */
+    val sourceCount = filteredSources.length
+
+    def checkSources(): Option[(Boolean, String)] =
+      if filteredSources.nonEmpty then
+        None
+      else
+        Some {
+          testFilter match
+            case _ :: _ => (true, s"""No files matched "${testFilter.mkString(",")}" in test""")
+            case _      =>
+              val msg =
+                if (testSources.isEmpty)
+                  "No tests available under target - erroneous test?"
+                else
+                  s"No tests available under target after filtering (before filtering: ${testSources.mkString(", ")})"
+              (filteredByName.isEmpty, msg)
+        }
+  }
+
+  private class SourceCheck(val testSources: List[TestSource]) extends TestSourceHandling
+
   /** Each `Test` takes the `testSources` and performs the compilation and assertions
    *  according to the implementing class "neg", "run" or "pos".
    */
-  protected class Test(testSources: List[TestSource], times: Int, threadLimit: Option[Int], suppressAllOutput: Boolean)(implicit val summaryReport: SummaryReporting) extends CompilationLogic { test =>
+  protected class Test(val testSources: List[TestSource], times: Int, threadLimit: Option[Int], suppressAllOutput: Boolean)(implicit val summaryReport: SummaryReporting) extends CompilationLogic with TestSourceHandling { test =>
 
     import summaryReport._
 
@@ -382,21 +423,6 @@ trait ParallelTesting extends RunnerOrchestration:
         summaryReport.echoToLog(logBuffer.iterator)
       }
     }
-
-    /** All testSources left after filtering out */
-    private val filteredSources =
-      val filteredByName =
-        if (testFilter.isEmpty) testSources
-        else testSources.filter {
-          case JointCompilationSource(_, files, _, _, _, _) =>
-            testFilter.exists(filter => files.exists(file => file.getPath.contains(filter)))
-          case SeparateCompilationSource(_, dir, _, _) =>
-            testFilter.exists(dir.getPath.contains)
-        }
-      filteredByName.filterNot(shouldSkipTestSource(_)).filter(shouldReRun(_))
-
-    /** Total amount of test sources being compiled by this test */
-    val sourceCount = filteredSources.length
 
     private var _testSourcesCompleted = 0
     private def testSourcesCompleted: Int = _testSourcesCompleted
@@ -776,9 +802,10 @@ trait ParallelTesting extends RunnerOrchestration:
           reproduceInstructions.foreach(addReproduceInstruction)
         else reportPassed()
       else echo {
-        testFilter match
-          case _ :: _ => s"""No files matched "${testFilter.mkString(",")}" in test"""
-          case _      => "No tests available under target - erroneous test?"
+        checkSources().map(_._2).getOrElse {
+          // should not happen
+          "No tests available under target - erroneous test?"
+        }
       }
 
       this
@@ -1183,16 +1210,44 @@ trait ParallelTesting extends RunnerOrchestration:
     def split(): Seq[CompilationTest] =
       targets.map(target => copy(List(target)))
 
-    def dynamicTests(run: CompilationTest => Unit): java.util.Collection[DynamicTest] =
-      targets
+    def dynamicTests(run: CompilationTest => Unit): java.util.Collection[DynamicTest] = {
+      val maybeTests = targets
         .map { target =>
-          val test0 = copy(List(target))
-          DynamicTest.dynamicTest(
-            target.title,
-            () => run(test0)
-          )
+          def dynTest = {
+            val test0 = copy(List(target))
+            DynamicTest.dynamicTest(
+              target.title,
+              () => run(test0)
+            )
+          }
+          SourceCheck(List(target)).checkSources() match {
+            case None => Right(Seq(dynTest))
+            case Some((errored, msg)) =>
+              if (emptyTargetCheck && errored) Left(s"Error with ${target.title}: $msg")
+              else {
+                System.err.println(s"Ignoring ${target.title}: $msg")
+                Right(Nil)
+              }
+          }
         }
-        .asJava
+
+      val errors = maybeTests.collect {
+        case Left(msg) => msg
+      }
+      if (errors.nonEmpty) {
+        for (msg <- errors)
+          System.err.println(msg)
+        sys.error("Found some empty tests")
+      }
+
+      val tests = maybeTests
+        .collect {
+          case Right(elems) => elems
+        }
+        .flatten
+
+      tests.asJava
+    }
 
     def namedDynamicTests(name: String)(run: CompilationTest => Unit): java.util.Collection[DynamicTest] =
       targets
