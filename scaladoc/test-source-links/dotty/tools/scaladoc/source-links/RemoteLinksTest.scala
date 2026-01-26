@@ -5,7 +5,6 @@ import scala.util.Random
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
-import dotty.tools.scaladoc.test.BuildInfo
 import java.nio.file.Path
 import java.nio.file.Paths
 import org.jsoup.Jsoup

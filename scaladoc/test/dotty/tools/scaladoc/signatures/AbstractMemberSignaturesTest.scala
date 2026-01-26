@@ -8,7 +8,6 @@ import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 import scala.language.unsafeNulls
 
-import dotty.tools.scaladoc.test.BuildInfo
 import org.jsoup.Jsoup
 import util.IO
 import java.io.File

@@ -1,7 +1,6 @@
 package dotty.tools.scaladoc
 
 import scala.jdk.CollectionConverters._
-import dotty.tools.scaladoc.test.BuildInfo
 import java.io.File
 import java.nio.file.Path;
 import org.jsoup.Jsoup

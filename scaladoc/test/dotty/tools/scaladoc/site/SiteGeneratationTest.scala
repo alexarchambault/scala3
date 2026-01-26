@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Assertions._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.nio.charset.Charset
-import dotty.tools.scaladoc.test.BuildInfo
 
 class SiteGeneratationTest extends BaseHtmlTest:
 
