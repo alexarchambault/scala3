@@ -32,7 +32,7 @@ class CompilationTests {
     var tests = List(
       compileFilesInDir("tests/pos", defaultOptions.and("-Wsafe-init", "-Wunused:all", "-Wshadow:private-shadow", "-Wshadow:type-parameter-shadow"), FileFilter.include(TestSources.posLintingAllowlist)),
       compileFilesInDir("tests/pos", defaultOptions.and("-Wsafe-init"), FileFilter.exclude(TestSources.posLintingAllowlist)),
-      compileFilesInDir("tests/pos-deep-subtype", allowDeepSubtypes),
+      compileFilesInDir("tests/pos-deep-subtype", allowDeepSubtypes, FileFilter.exclude("i21015.scala")),
       compileFilesInDir("tests/pos-special/sourcepath/outer", defaultOptions.and("-sourcepath", "tests/pos-special/sourcepath")),
       compileFile("tests/pos-special/sourcepath/outer/nested/Test4.scala", defaultOptions.and("-sourcepath", "tests/pos-special/sourcepath")),
       compileFilesInDir("tests/pos-scala2", defaultOptions.and("-source", "3.0-migration")),

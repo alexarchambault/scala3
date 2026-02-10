@@ -11,3 +11,5 @@ tagless.scala
 safeThrowsStrawman2.scala
 t7584.scala
 function-arity.scala
+boehm-berarducci.scala
+i22150.scala

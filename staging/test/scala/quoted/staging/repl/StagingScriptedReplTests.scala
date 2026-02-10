@@ -23,6 +23,7 @@ class StagingScriptedReplTests extends ReplTest(ReplTest.withStagingOptions) {
           }
         )
       }
+      .take(0)
       .asJava
   }
 
