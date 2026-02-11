@@ -1,7 +1,7 @@
 package dotty.tools.dotc.profile
 
-import org.junit.Assert.*
-import org.junit.*
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.*
 
 import scala.annotation.tailrec
 import dotty.tools.DottyTest

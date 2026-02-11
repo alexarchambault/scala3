@@ -3,8 +3,8 @@ package repl
 
 import scala.language.unsafeNulls
 
-import org.junit.Assert._
-import org.junit.Test
+import org.junit.jupiter.api.Assertions._
+import org.junit.jupiter.api.Test
 
 /** These tests test input that has proved problematic */
 class TabcompleteTests extends ReplTest {

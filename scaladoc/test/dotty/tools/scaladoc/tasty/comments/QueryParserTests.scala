@@ -1,8 +1,8 @@
 package dotty.tools.scaladoc
 package tasty.comments
 
-import org.junit.{Test, Rule}
-import org.junit.Assert.{assertSame, assertTrue, assertEquals}
+import org.junit.jupiter.api.Test
+import dotty.Assertions.{assertSame, assertTrue, assertEquals}
 
 class QueryParserTests {
   @Test def test() = {

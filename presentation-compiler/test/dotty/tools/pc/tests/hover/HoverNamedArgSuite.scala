@@ -5,7 +5,7 @@ import scala.meta.pc.SymbolDocumentation
 import dotty.tools.pc.base.BaseHoverSuite
 import dotty.tools.pc.utils.MockEntries
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class HoverNamedArgSuite extends BaseHoverSuite:
 

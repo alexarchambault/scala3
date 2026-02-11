@@ -2,7 +2,7 @@ package dotty.tools.pc.tests.hover
 
 import dotty.tools.pc.base.BaseHoverSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import dotty.tools.pc.utils.MockEntries
 import scala.meta.pc.SymbolDocumentation
 

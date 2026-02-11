@@ -1,8 +1,7 @@
 package dotty.tools
 package vulpix
 
-import org.junit.{ Test, AfterClass }
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.*
 import scala.concurrent.duration._
 import TestConfiguration._
 
@@ -10,7 +9,7 @@ import TestConfiguration._
  *  CompilationTests.scala. It is meant to be called from bash to diff with
  *  output against an expected result.
  */
-@Category(Array(classOf[dotty.VulpixMetaTests]))
+@Tag("VulpixMeta")
 class VulpixMetaTests {
   import VulpixMetaTests._
 
@@ -32,6 +31,6 @@ object VulpixMetaTests extends ParallelTesting {
   def updateCheckFiles: Boolean = false
   def failedTests = None
 
-  @AfterClass
+  @AfterAll
   def tearDown() = this.cleanup()
 }

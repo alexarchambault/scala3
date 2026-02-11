@@ -2,8 +2,8 @@ package xsbt
 
 import xsbti.UseScope
 
-import org.junit.{ Test, Ignore }
-import org.junit.Assert._
+import org.junit.jupiter.api.Assertions._
+import org.junit.jupiter.api.*
 
 class ExtractUsedNamesSpecification {
 
@@ -200,7 +200,7 @@ class ExtractUsedNamesSpecification {
 
   // test for https://github.com/gkossakowski/sbt/issues/4
   // TODO: we should fix it by having special treatment of `selectDynamic` and `applyDynamic` calls
-  @Ignore("Call to Dynamic is desugared in type checker so Select nodes is turned into string literal.")
+  @Disabled("Call to Dynamic is desugared in type checker so Select nodes is turned into string literal.")
   def extractNamesFromMethodCallOnDynamic = {
     val srcA = """|import scala.language.dynamics
                   |class A extends Dynamic {

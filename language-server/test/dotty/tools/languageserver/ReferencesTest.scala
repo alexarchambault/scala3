@@ -1,24 +1,23 @@
 package dotty.tools.languageserver
 
-import org.junit.Test
-import org.junit.Ignore
+import org.junit.jupiter.api.*
 
 import dotty.tools.languageserver.util.Code._
 
 class ReferencesTest {
 
-  @Ignore
+  @Disabled
   @Test def valNoReferences0: Unit =
     code"class X { val ${m1}x$m2 = 9 }"
       .references(m1 to m2, Nil)
 
-  @Ignore
+  @Disabled
   @Test def valReferences0: Unit = {
     code"class X { val ${m1}x$m2 = 9; ${m3}x$m4; ${m5}x$m6 }"
       .references(m1 to m2, List(m3 to m4, m5 to m6))
   }
 
-  @Ignore
+  @Disabled
   @Test def valReferences1: Unit = {
     code"class X { val ${m1}x$m2 = 9; ${m3}x$m4; ${m5}x$m6 }"
       .references(m1 to m2, List(m1 to m2, m3 to m4, m5 to m6), withDecl = true)
@@ -64,7 +63,7 @@ class ReferencesTest {
       .references(m3 to m4, List(m3 to m4), withDecl = false)
   }
 
-  @Ignore
+  @Disabled
   @Test def valReferencesInDifferentProject: Unit = {
     val p0 = Project.withSources(
       code"""object A { val ${m1}x${m2} = 1 }"""
@@ -109,7 +108,7 @@ class ReferencesTest {
       .references(m5 to m6, List(m1 to m2, m3 to m4, m5 to m6), withDecl = false)
   }
 
-  @Ignore
+  @Disabled
   @Test def moduleReferencesInDifferentProject: Unit = {
     val p0 = Project.withSources(
       code"""object ${m1}A${m2}"""
@@ -126,7 +125,7 @@ class ReferencesTest {
       .references(m3 to m4, List(m3 to m4), withDecl = false)
   }
 
-  @Ignore
+  @Disabled
   @Test def classReferencesInDifferentProject: Unit = {
     val p0 = Project.withSources(
       code"""class ${m1}A${m2}"""
@@ -149,7 +148,7 @@ class ReferencesTest {
       .references(m5 to m6, List(m3 to m4, m5 to m6), withDecl = false)
   }
 
-  @Ignore
+  @Disabled
   @Test def defReferencesInDifferentProject: Unit = {
     val p0 = Project.withSources(
       code"""object A { def ${m1}x${m2} = 1 }"""
@@ -172,7 +171,7 @@ class ReferencesTest {
       .references(m5 to m6, List(m3 to m4, m5 to m6), withDecl = false)
   }
 
-  @Ignore
+  @Disabled
   @Test def deeplyNestedValReferencesInDifferentProject: Unit = {
     val p0 = Project.withSources(
       code"""class A { class Z { class Y { class X { val ${m1}x${m2} = 1 } } } }"""
@@ -195,7 +194,7 @@ class ReferencesTest {
       .references(m3 to m4, List(m3 to m4), withDecl = false)
   }
 
-  @Ignore
+  @Disabled
   @Test def deeplyNestedStaticValReferencesInDifferentProject: Unit = {
     val p0 = Project.withSources(
       code"""object A { object Z { object Y { object X { val ${m1}x${m2} = 1 } } } }"""

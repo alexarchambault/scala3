@@ -11,12 +11,13 @@ import scala.language.unsafeNulls
 import dotty.tools.scaladoc.test.BuildInfo
 import org.jsoup.Jsoup
 import util.IO
-import org.junit.Assert.assertTrue
+import java.io.File
+import org.junit.jupiter.api.Assertions.assertTrue
 
 class AbstractMembers extends ScaladocTest("abstractmembersignatures"):
 
-  def runTest = {
-    afterRendering {
+  def runTest(tempDir: File) = {
+    afterRendering(tempDir) {
       val actualSignatures = signaturesFromDocumentation()
       actualSignatures.foreach { (k, v) => k match
         case "Abstract methods" => assertTrue(v.forall(_._2 == "shouldBeAbstract"))

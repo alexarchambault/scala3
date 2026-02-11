@@ -2,8 +2,8 @@ package dotty.tools.pc.tests.completion
 
 import dotty.tools.pc.base.BaseCompletionSuite
 
-import org.junit.Test
-import org.junit.Ignore
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Disabled
 
 class CompletionSnippetSuite extends BaseCompletionSuite:
 
@@ -78,7 +78,7 @@ class CompletionSnippetSuite extends BaseCompletionSuite:
 
   // Dotty does not currently support fuzzy completions. Please take a look at
   // https://github.com/lampepfl/dotty-feature-requests/issues/314
-  @Ignore("Fuzzy should be provided by dotty")
+  @Disabled("Fuzzy should be provided by dotty")
   @Test def `type-empty` =
     if (scala.util.Properties.isJavaAtLeast("9")) {
       checkSnippet(
@@ -108,7 +108,7 @@ class CompletionSnippetSuite extends BaseCompletionSuite:
 
     // Dotty does not currently support fuzzy completions. Please take a look at
     // https://github.com/lampepfl/dotty-feature-requests/issues/314
-  @Ignore("Fuzzy should be provided by dotty")
+  @Disabled("Fuzzy should be provided by dotty")
   @Test def `type-new-empty` =
     if (scala.util.Properties.isJavaAtLeast("9")) {
       checkSnippet(
@@ -384,7 +384,7 @@ class CompletionSnippetSuite extends BaseCompletionSuite:
       topLines = Some(4)
     )
 
-  @Ignore
+  @Disabled
   @Test def `no-apply` =
     checkSnippet(
       s"""|package example

@@ -7,16 +7,13 @@ package dotty.tools.dotc.classpath
 import dotty.tools.io.ClassPath
 import dotty.tools.backend.jvm.AsmUtils
 
-import org.junit.Assert._
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
+import dotty.Assertions._
+import org.junit.jupiter.api.Test
 
 import dotty.tools.dotc.config.PathResolver
 import dotty.tools.dotc.core.Contexts.{Context, ContextBase}
 import dotty.tools.dotc.classpath.ClassPathFactory
 
-@RunWith(classOf[JUnit4])
 class JrtClassPathTest {
 
   @Test def lookupJavaClasses(): Unit = {

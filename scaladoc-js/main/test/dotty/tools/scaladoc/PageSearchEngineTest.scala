@@ -1,7 +1,7 @@
 package dotty.tools.scaladoc
 
-import org.junit.{Assert, Test}
-import org.junit.Assert.*
+import dotty.Assertions.*
+import org.junit.jupiter.api.*
 
 import scala.concurrent.Await
 import scala.concurrent.duration.*

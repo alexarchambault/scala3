@@ -2,7 +2,7 @@ package dotty.tools
 
 import vulpix.TestConfiguration
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 import dotc.ast.Trees.*
 import dotc.ast.tpd

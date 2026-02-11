@@ -2,7 +2,7 @@ package dotty.tools.pc.tests.edit
 
 import dotty.tools.pc.base.BaseAutoImportsSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class AutoImportExtensionMethodsSuite extends BaseAutoImportsSuite:
 

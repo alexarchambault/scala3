@@ -6,8 +6,8 @@ import scala.language.unsafeNulls
 import dotty.tools.pc.base.BaseCompletionSuite
 import dotty.tools.pc.utils.MockEntries
 
-import org.junit.Test
-import org.junit.Ignore
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Disabled
 
 class CompletionSuite extends BaseCompletionSuite:
 
@@ -188,7 +188,7 @@ class CompletionSuite extends BaseCompletionSuite:
          |""".stripMargin
     )
 
-  @Ignore("This test should be handled by compiler fuzzy search")
+  @Disabled("This test should be handled by compiler fuzzy search")
   @Test def fuzzy =
     check(
       """
@@ -200,7 +200,7 @@ class CompletionSuite extends BaseCompletionSuite:
          |""".stripMargin
     )
 
-  @Ignore("This test should be handled by compiler fuzzy search")
+  @Disabled("This test should be handled by compiler fuzzy search")
   @Test def fuzzy1 =
     check(
       """
@@ -412,7 +412,7 @@ class CompletionSuite extends BaseCompletionSuite:
       includeCommitCharacter = true
     )
 
-  @Ignore
+  @Disabled
   @Test def `numeric-sort` =
     check(
       """
@@ -1704,7 +1704,7 @@ class CompletionSuite extends BaseCompletionSuite:
       ""
     )
 
-  @Ignore
+  @Disabled
   @Test def `dont-crash-implicit-search` =
     check(
       """object M:

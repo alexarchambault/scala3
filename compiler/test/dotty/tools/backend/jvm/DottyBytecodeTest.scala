@@ -22,7 +22,7 @@ import scala.tools.asm.{ClassWriter, ClassReader}
 import scala.tools.asm.tree._
 import java.io.{File => JFile, InputStream}
 
-import org.junit.Assert._
+import org.junit.jupiter.api.Assertions._
 
 trait DottyBytecodeTest {
   import AsmNode._

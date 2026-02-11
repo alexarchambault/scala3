@@ -6,7 +6,7 @@ import dotty.tools.dotc.semanticdb.{SymbolOccurrence, TextDocument}
 import dotty.tools.pc.base.BasePCSuite
 import scala.language.unsafeNulls
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class PcSemanticdbSuite extends BasePCSuite:
 

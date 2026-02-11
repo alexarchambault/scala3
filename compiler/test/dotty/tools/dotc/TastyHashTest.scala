@@ -1,7 +1,7 @@
 package dotty.tools.dotc
 
-import org.junit.Test
-import org.junit.Assert.assertEquals
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertEquals
 
 import dotty.tools.tasty.TastyHash.pjwHash64
 

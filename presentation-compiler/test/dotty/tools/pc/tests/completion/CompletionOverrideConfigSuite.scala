@@ -6,7 +6,7 @@ import scala.meta.pc.PresentationCompilerConfig.OverrideDefFormat
 
 import dotty.tools.pc.base.BaseCompletionSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class CompletionOverrideConfigSuite extends BaseCompletionSuite:
 

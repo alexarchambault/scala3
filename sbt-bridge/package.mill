@@ -16,6 +16,9 @@ trait SbtBridge extends CrossScala3Module { outer =>
   )
 
   object test extends Scala3Tests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      build.`test-helpers`(crossValue)
+    )
     def testSources = outer.testSources
     def mvnDeps = super.mvnDeps() ++ Seq(
       mvn"org.scala-sbt:zinc-apiinfo_2.13:1.8.0"

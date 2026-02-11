@@ -3,8 +3,8 @@ package dotty.tools.scaladoc
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import org.junit.Test
-import org.junit.Assert
+import org.junit.jupiter.api.{util => _, *}
+import dotty.Assertions.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.nio.charset.Charset
@@ -66,7 +66,7 @@ class ReportingTest:
       assertNoWarning(diag)
       val Seq(msg) = diag.errorMsgs.map(_.toLowerCase)
       Seq("conflict","api", "resource", "resources/tests/adoc.html").foreach(word =>
-        Assert.assertTrue(s"Error message: $msg should contains $word", msg.contains(word)))
+        assertTrue(s"Error message: $msg should contains $word", msg.contains(word)))
     }
 
   @Test
@@ -82,6 +82,6 @@ class ReportingTest:
       val Seq(msg) = diag.errorMsgs.map(_.toLowerCase)
       Seq("conflict","api", "static", "page", "docs/tests/adoc.html")
       .foreach( word =>
-          Assert.assertTrue(s"Error message: $msg should contains $word", msg.contains(word))
+          assertTrue(s"Error message: $msg should contains $word", msg.contains(word))
         )
     }

@@ -132,6 +132,9 @@ trait Scaladoc extends CrossScala3Module { scaladoc =>
   }
 
   object test extends Scala3Tests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      build.`test-helpers`(crossValue)
+    )
     def testSources = scaladoc.testSources
     def runClasspath = Task {
       // Ensure scaladoc-testcases is compiled, so that the directory
@@ -150,7 +153,8 @@ trait Scaladoc extends CrossScala3Module { scaladoc =>
   def testSourceLinksSrc = Task.Source("test-source-links")
   object `test-source-links` extends Scala3Tests {
     def moduleDeps = super.moduleDeps ++ Seq(
-      build.scaladoc(crossValue).test
+      build.scaladoc(crossValue).test,
+      build.`test-helpers`(crossValue)
     )
     def testSources = Task {
       Seq(testSourceLinksSrc())

@@ -1,6 +1,6 @@
 package dotty.tools.languageserver
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.eclipse.lsp4j.SymbolKind
 
 import dotty.tools.languageserver.util.Code._

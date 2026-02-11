@@ -2,8 +2,7 @@ package dotty.tools.pc.tests.hover
 
 import dotty.tools.pc.base.BaseHoverSuite
 
-import org.junit.Test
-import org.junit.Ignore
+import org.junit.jupiter.api.*
 
 class HoverTermSuite extends BaseHoverSuite:
 
@@ -69,7 +68,7 @@ class HoverTermSuite extends BaseHoverSuite:
          |""".stripMargin.hover
     )
 
-  @Ignore
+  @Disabled
   @Test def `interpolator-name` =
     check(
       """
@@ -82,7 +81,7 @@ class HoverTermSuite extends BaseHoverSuite:
          |""".stripMargin.hover
     )
 
-  @Ignore
+  @Disabled
   @Test def `interpolator-macro` =
     check(
       """

@@ -1,7 +1,7 @@
 package dotty.tools.scaladoc
 package site
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class NavigationTest extends BaseHtmlTest:
 

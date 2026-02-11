@@ -1,7 +1,7 @@
 package dotty.tools.scaladoc
 package tasty.comments
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 abstract class BaseIntegrationTest(pck: String) extends BaseHtmlTest:
 

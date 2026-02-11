@@ -3,8 +3,8 @@ package dotty.tools.dotc.typer
 import dotty.tools.DottyTest
 import dotty.tools.dotc.core.Contexts._
 
-import org.junit.Test
-import org.junit.Assert.{ assertTrue, fail }
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.{ assertTrue, fail }
 
 class DivergenceCheckerTests extends DottyTest {
   @Test

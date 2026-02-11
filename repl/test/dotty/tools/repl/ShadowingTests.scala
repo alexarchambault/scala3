@@ -7,7 +7,7 @@ import java.io.File
 import java.nio.file.{Path, Files}
 import java.util.Comparator
 
-import org.junit.{Test, Ignore, BeforeClass, AfterClass}
+import org.junit.jupiter.api.*
 
 import dotc.Driver
 import dotc.reporting.TestReporter
@@ -39,10 +39,10 @@ object ShadowingTests:
   // The directory on the classpath containing artifacts to be shadowed
   private var dir: Path = null
 
-  @BeforeClass def setupDir: Unit =
+  @BeforeAll def setupDir: Unit =
     dir = Files.createTempDirectory("repl-shadow")
 
-  @AfterClass def tearDownDir: Unit =
+  @AfterAll def tearDownDir: Unit =
     Files.walk(dir).sorted(Comparator.reverseOrder).forEach(Files.delete)
     dir = null
 

@@ -15,9 +15,8 @@ import scala.jdk.CollectionConverters._
 
 import javax.tools.ToolProvider
 
-import org.junit.Assert._
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import dotty.Assertions._
+import org.junit.jupiter.api.*
 
 import dotty.BootstrappedOnlyTests
 import dotty.tools.dotc.Main
@@ -51,7 +50,7 @@ import dotty.tools.dotc.util.SourceFile
   Files.write(rootSrc.resolve("metac.expect"), metacSb.toString.getBytes(StandardCharsets.UTF_8))
 
 
-@Category(Array(classOf[BootstrappedOnlyTests]))
+@Tag("BootstrappedOnly")
 class SemanticdbTests:
   val javaFile: PathMatcher = FileSystems.getDefault.getPathMatcher("glob:**.java")
   val scalaFile: PathMatcher = FileSystems.getDefault.getPathMatcher("glob:**.scala")
@@ -61,7 +60,7 @@ class SemanticdbTests:
   val javaRoot: Path = rootSrc.resolve("javacp")
   val metacExpectFile: Path = rootSrc.resolve("metac.expect")
 
-  @Category(Array(classOf[dotty.SlowTests]))
+  @Tag("slow")
   @Test def expectTests: Unit = if (!scala.util.Properties.isWin) runExpectTest(updateExpectFiles = false)
 
   def runExpectTest(updateExpectFiles: Boolean): Unit =

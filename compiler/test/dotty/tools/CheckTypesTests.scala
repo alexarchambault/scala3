@@ -1,7 +1,7 @@
 package dotty.tools
 
-import org.junit.Test
-import org.junit.Assert.{ assertFalse, assertTrue, fail }
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.{ assertFalse, assertTrue, fail }
 
 import dotc.core.Contexts.Context
 

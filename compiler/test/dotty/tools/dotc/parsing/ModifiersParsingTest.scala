@@ -2,8 +2,8 @@ package dotty.tools
 package dotc
 package parsing
 
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions._
 
 import ast.Trees.mods
 import ast.untpd._

@@ -10,16 +10,16 @@ import scala.meta.internal.pc.CompilerJobQueue
 import scala.language.unsafeNulls
 import scala.util.Try
 
-import org.junit.{After, Assert, Before, Test}
+import org.junit.jupiter.api.*
 
 class CompilerJobQueueSuite:
   var jobs: CompilerJobQueue = null
 
-  @Before
+  @BeforeEach
   def beforeEach: Unit =
     jobs = CompilerJobQueue()
 
-  @After
+  @AfterEach
   def afterEach: Unit =
     jobs.shutdown()
 
@@ -50,7 +50,7 @@ class CompilerJobQueueSuite:
     Await.result(all, Duration("1s"))
 
     // Assert all submitted non-cancelled jobs completed.
-    Assert.assertEquals(obtained.length, size)
+    Assertions.assertEquals(obtained.length, size)
 
     // Assert that the jobs don't run in the default order.
-    Assert.assertNotEquals(obtained.toList, original)
+    Assertions.assertNotEquals(obtained.toList, original)

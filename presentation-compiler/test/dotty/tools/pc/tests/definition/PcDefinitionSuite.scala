@@ -8,7 +8,7 @@ import dotty.tools.pc.base.BasePcDefinitionSuite
 import dotty.tools.pc.utils.MockEntries
 
 import org.eclipse.lsp4j.Location
-import org.junit.{Ignore, Test}
+import org.junit.jupiter.api.*
 
 class PcDefinitionSuite extends BasePcDefinitionSuite:
 
@@ -322,7 +322,7 @@ class PcDefinitionSuite extends BasePcDefinitionSuite:
          |""".stripMargin
     )
 
-  @Ignore // TODO SemanticdbSymbols.inverseSemanticdbSymbol does not support params and type params search
+  @Disabled // TODO SemanticdbSymbols.inverseSemanticdbSymbol does not support params and type params search
   @Test def `named-arg-global` =
     check(
       """|object Main {

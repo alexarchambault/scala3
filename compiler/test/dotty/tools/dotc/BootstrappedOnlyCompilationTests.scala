@@ -4,11 +4,9 @@ package dotc
 
 import scala.language.unsafeNulls
 
-import org.junit.{ Test, BeforeClass, AfterClass }
-import org.junit.Assert._
-import org.junit.Assume._
-import org.junit.Ignore
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions._
+import org.junit.jupiter.api.Disabled
 
 import scala.concurrent.duration._
 import reporting.TestReporter
@@ -16,7 +14,7 @@ import vulpix._
 
 import java.nio.file._
 
-@Category(Array(classOf[BootstrappedOnlyTests]))
+@Tag("BootstrappedOnly")
 class BootstrappedOnlyCompilationTests {
   import ParallelTesting._
   import TestConfiguration._
@@ -132,7 +130,7 @@ class BootstrappedOnlyCompilationTests {
     aggregateTests(tests*).checkRuns()
   }
 
-  @Ignore @Test def runScala2LibraryFromTasty: Unit = {
+  @Disabled @Test def runScala2LibraryFromTasty: Unit = {
     implicit val testGroup: TestGroup = TestGroup("runScala2LibraryFromTasty")
     // These tests recompile the entire scala2-library from TASTy,
     // they are resource intensive and should not run alongside other tests to avoid timeouts
@@ -232,7 +230,7 @@ object BootstrappedOnlyCompilationTests extends ParallelTesting {
   def failedTests = TestReporter.lastRunFailedTests
 
   implicit val summaryReport: SummaryReporting = new SummaryReport
-  @AfterClass def tearDown(): Unit = {
+  @AfterAll def tearDown(): Unit = {
     super.cleanup()
     summaryReport.echoSummary()
   }

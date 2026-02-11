@@ -17,8 +17,8 @@ import dotty.tools.dotc.config.ScalaVersion
 
 import java.nio.file.*, Files.*
 
-import org.junit.Test
-import org.junit.Assert.{assertEquals, assertFalse, assertNotEquals, assertTrue}
+import org.junit.jupiter.api.Test
+import dotty.Assertions._
 
 import scala.util.Using
 

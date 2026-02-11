@@ -5,7 +5,7 @@ import dotty.tools.pc.base.BaseCompletionSuite
 import scala.meta.internal.pc.PresentationCompilerConfigImpl
 import scala.meta.pc.PresentationCompilerConfig
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class CompletionWithoutDetailsSuite extends BaseCompletionSuite:
 

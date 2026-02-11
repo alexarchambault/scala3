@@ -40,6 +40,9 @@ object `package` extends Module {
     // scalacOptions -= "-Yexplicit-nulls"
 
     object test extends Scala3JsTests {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        build.`test-helpers`(crossValue)
+      )
       def testSources = Seq(testSrc())
     }
   }

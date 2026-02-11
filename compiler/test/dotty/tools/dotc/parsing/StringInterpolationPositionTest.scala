@@ -3,7 +3,7 @@ package dotc
 package parsing
 
 import ast.untpd._
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class StringInterpolationPositionTest extends ParserTest {
 

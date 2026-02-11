@@ -16,8 +16,9 @@ import dotty.tools.io.{Directory, File, Path}
 
 import dotty.tools.vulpix.TestConfiguration
 
-import org.junit.Test
-import org.junit.Assert.{assertEquals, assertFalse, fail}
+import org.junit.jupiter.api.Test
+import dotty.Assertions._
+import org.junit.jupiter.api.Assertions.fail
 import dotty.tools.io.AbstractFile
 
 class CommentPicklingTest {

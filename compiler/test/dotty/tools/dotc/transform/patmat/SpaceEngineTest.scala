@@ -8,7 +8,8 @@ import ast.*, tpd.*
 
 import vulpix.TestConfiguration, TestConfiguration.basicClasspath
 
-import org.junit, junit.Test, junit.Assert.*
+import org.junit.jupiter.api.Test
+import dotty.Assertions.*
 
 class SpaceEngineTest:
   import SpaceEngine.*

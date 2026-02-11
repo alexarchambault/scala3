@@ -3,8 +3,8 @@ package dotc
 package reporting
 
 import dotty.tools.dotc.core.Contexts.Context
-import org.junit.Assert._
-import org.junit.Test
+import org.junit.jupiter.api.Assertions._
+import org.junit.jupiter.api.Test
 
 class UserDefinedErrorMessages extends ErrorMessagesTest {
   @Test def userDefinedImplicitAmbiguous1 =

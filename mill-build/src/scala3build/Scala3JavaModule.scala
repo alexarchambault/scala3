@@ -6,13 +6,16 @@ import mill.scalalib.*
 import mill.scalalib.publish.*
 
 trait Scala3JavaModule extends JavaModule with PublishModule with Mima {
-  trait Scala3JavaTests extends JavaTests with TestModule with TestModule.Junit4 {
+  trait Scala3JavaTests extends JavaTests with TestModule with TestModule.Junit5 {
     def testSources: T[Seq[PathRef]]
     def sources = testSources
     def testParallelism = false
 
+    def testFramework = "com.github.sbt.junit.jupiter.api.JupiterFramework"
     def mvnDeps = super.mvnDeps() ++ Seq(
-      mvn"com.github.sbt:junit-interface:0.13.3"
+      mvn"com.github.sbt.junit:jupiter-interface:0.17.0",
+      mvn"org.junit.platform:junit-platform-launcher:1.14.1",
+      mvn"org.junit.jupiter:junit-jupiter-api:${Versions.junitJupiter}"
     )
   }
 

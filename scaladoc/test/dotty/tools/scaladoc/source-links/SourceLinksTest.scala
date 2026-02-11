@@ -2,8 +2,8 @@ package dotty.tools.scaladoc
 package sourcelinks
 
 import java.nio.file._
-import org.junit.Assert._
-import org.junit.Test
+import dotty.Assertions._
+import org.junit.jupiter.api.Test
 
 class SourceLinkTest:
 

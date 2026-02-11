@@ -5,8 +5,7 @@ import scala.meta.pc.PresentationCompilerConfig
 
 import dotty.tools.pc.base.BaseCompletionSuite
 
-import org.junit.Test
-import org.junit.Ignore
+import org.junit.jupiter.api.*
 
 class CompletionCaseSuite extends BaseCompletionSuite:
 
@@ -250,7 +249,7 @@ class CompletionCaseSuite extends BaseCompletionSuite:
          |""".stripMargin
     )
 
-  @Ignore
+  @Disabled
   @Test def `lambda` =
     check(
       """
@@ -293,7 +292,7 @@ class CompletionCaseSuite extends BaseCompletionSuite:
          |""".stripMargin
     )
 
-  @Ignore
+  @Disabled
   @Test def `lambda-curry` =
     check(
       """
@@ -308,7 +307,7 @@ class CompletionCaseSuite extends BaseCompletionSuite:
          |""".stripMargin
     )
 
-  @Ignore
+  @Disabled
   @Test def `partial` =
     check(
       """
@@ -351,7 +350,7 @@ class CompletionCaseSuite extends BaseCompletionSuite:
          |""".stripMargin
     )
 
-  @Ignore
+  @Disabled
   @Test def `infix` =
     check(
       """

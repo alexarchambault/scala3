@@ -5,7 +5,7 @@ import dotty.tools.languageserver.util.embedded.CodeMarker
 import dotty.tools.languageserver.util.server.TestFile
 
 import org.eclipse.lsp4j.{CompletionItem, CompletionItemKind}
-import org.junit.Assert.{assertEquals, assertFalse, assertTrue}
+import dotty.Assertions.{assertEquals, assertFalse, assertTrue}
 
 import scala.jdk.CollectionConverters._
 

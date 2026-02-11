@@ -4,8 +4,8 @@ package config
 import CommandLineParser.tokenize
 import Settings._
 import dotty.tools.dotc.config.ScalaSettingCategories._
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import dotty.Assertions._
 import core.Decorators.toMessage
 import dotty.tools.io.{Path, PlainFile}
 

@@ -5,7 +5,7 @@ package ast
 import core._
 import Names._, Types._ , Symbols._, StdNames._, Flags._, Contexts._
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class DesugarTests extends DottyTest {
   import tpd._

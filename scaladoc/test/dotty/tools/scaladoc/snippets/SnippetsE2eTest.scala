@@ -1,10 +1,11 @@
 package dotty.tools.scaladoc
 package snippets
 
+import java.io.File
 import scala.io.Source
 
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import dotty.Assertions._
 import dotty.tools.io.{AbstractFile, VirtualDirectory}
 import dotty.tools.scaladoc.test.BuildInfo
 import scala.util.matching.Regex
@@ -28,17 +29,17 @@ abstract class SnippetsE2eTest(testName: String, flag: SCFlags) extends Scaladoc
   def report(str: String) = s"""|In test $testName:
                                 |$str""".stripMargin
 
-  override def args = Scaladoc.Args(
+  override def args(tempDir: File) = Scaladoc.Args(
       name = "test",
       tastyDirs = BuildInfo.test_testcasesOutputDir.map(java.io.File(_)).toSeq,
       tastyFiles = tastyFiles(testName),
-      output = getTempDir().getRoot,
+      output = tempDir,
       projectVersion = Some("1.0"),
       snippetCompiler = List(s"${BuildInfo.test_testcasesSourceRoot}/tests=${flag.flagName}")
     )
 
-  override def withModule(op: DocContext ?=> Module => Unit) =
-    given DocContext = DocContext(args, testContext.fresh.setReporter(new StoreReporter))
+  override def withModule(tempDir: File)(op: DocContext ?=> Module => Unit) =
+    given DocContext = DocContext(args(tempDir), testContext.fresh.setReporter(new StoreReporter))
     op(ScalaModuleProvider.mkModule())
 
   private def checkWrappedSnippet(ws: WrappedSnippet, si: SnippetInfo) = {
@@ -135,9 +136,9 @@ abstract class SnippetsE2eTest(testName: String, flag: SCFlags) extends Scaladoc
     }
   }
 
-  def runTest = {
-    org.junit.Assume.assumeTrue("Running on Windows", java.io.File.separatorChar == '/')
-    withModule(moduleTestingFunc)
+  def runTest(tempDir: File) = {
+    dotty.Assumptions.assumeTrue("Running on Windows", java.io.File.separatorChar == '/')
+    withModule(tempDir)(moduleTestingFunc)
   }
 
 object SnippetsE2eTest:

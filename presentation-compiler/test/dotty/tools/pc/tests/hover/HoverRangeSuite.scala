@@ -2,7 +2,7 @@ package dotty.tools.pc.tests.hover
 
 import dotty.tools.pc.base.BaseHoverSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class HoverRangeSuite extends BaseHoverSuite:
 

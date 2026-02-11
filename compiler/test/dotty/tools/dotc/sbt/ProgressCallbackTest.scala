@@ -4,8 +4,8 @@ import dotty.tools.DottyTest
 import dotty.tools.dotc.core.Contexts.FreshContext
 import dotty.tools.dotc.sbt.ProgressCallbackTest.*
 
-import org.junit.Assert.*
-import org.junit.Test
+import dotty.Assertions.*
+import org.junit.jupiter.api.Test
 
 import dotty.tools.dotc.core.Contexts.Context
 import dotty.tools.dotc.core.Contexts.ctx

@@ -4,8 +4,8 @@ import dotty.tools.DottyTest
 import dotty.tools.dotc.core.Symbols.defn
 import dotty.tools.dotc.core.TypeOps
 
-import org.junit.Test
-import org.junit.Assert.assertEquals
+import org.junit.jupiter.api.*
+import dotty.Assertions._
 
 class TypesTest extends DottyTest:
 

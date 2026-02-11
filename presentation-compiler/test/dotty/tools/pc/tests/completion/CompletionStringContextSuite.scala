@@ -1,7 +1,7 @@
 package dotty.tools.pc.tests.completion
 
 import dotty.tools.pc.base.BaseCompletionSuite
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import dotty.tools.dotc.core.Types.ThisType.raw
 
 class CompletionStringContextSuite extends BaseCompletionSuite:
@@ -12,20 +12,20 @@ class CompletionStringContextSuite extends BaseCompletionSuite:
     | val VersionRegex = "".r
     | VersionRe@@"1234"
     """.stripMargin,
-    "|VersionRegex: Regex".stripMargin 
+    "|VersionRegex: Regex".stripMargin
   )
 
   @Test
   def workspaceSymbol = check(
     """
     |object M:
-    | ListBuf@@"1234" 
+    | ListBuf@@"1234"
     """.stripMargin,
     """
     |ListBuffer[A](elems: A*): ListBuffer[A] - scala.collection.mutable
     |new ListBuffer[A]: ListBuffer[A] - scala.collection.mutable
     |ListBuffer - scala.collection.mutable
-    |""".stripMargin 
+    |""".stripMargin
   )
 
   @Test
@@ -34,7 +34,7 @@ class CompletionStringContextSuite extends BaseCompletionSuite:
     |object M:
     | ra@@"1234"
     """.stripMargin,
-    "|raw(args: Any*): String".stripMargin 
+    "|raw(args: Any*): String".stripMargin
   )
 
   // bellow are tests of edits
@@ -47,7 +47,7 @@ class CompletionStringContextSuite extends BaseCompletionSuite:
     """
     |object M:
     | raw"1234"
-    |""".stripMargin 
+    |""".stripMargin
   )
 
   @Test
@@ -60,7 +60,7 @@ class CompletionStringContextSuite extends BaseCompletionSuite:
     |object M:
     | println"1234"
     |""".stripMargin,
-    assertSingleItem = false 
+    assertSingleItem = false
   )
 
   @Test
@@ -75,5 +75,5 @@ class CompletionStringContextSuite extends BaseCompletionSuite:
     | def select(s: String): String = s
     | select"1234"
     |""".stripMargin,
-    assertSingleItem = false 
+    assertSingleItem = false
   )

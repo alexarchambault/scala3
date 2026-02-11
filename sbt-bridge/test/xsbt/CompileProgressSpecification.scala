@@ -1,7 +1,7 @@
 package xsbt
 
-import org.junit.{ Test, Ignore }
-import org.junit.Assert._
+import dotty.Assertions.*
+import org.junit.jupiter.api.*
 
 /**Only does some rudimentary checks to assert compat with sbt.
  * More thorough tests are found in compiler/test/dotty/tools/dotc/sbt/ProgressCallbackTest.scala

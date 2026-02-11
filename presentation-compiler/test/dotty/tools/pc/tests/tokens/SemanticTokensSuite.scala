@@ -3,7 +3,7 @@ package dotty.tools.pc.tests.tokens
 import dotty.tools.pc.base.BaseSemanticTokensSuite
 import java.nio.file.Path
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class SemanticTokensSuite extends BaseSemanticTokensSuite:
 

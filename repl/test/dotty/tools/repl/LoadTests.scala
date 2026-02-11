@@ -7,8 +7,8 @@ import java.nio.file.{Path, Files}
 import java.util.Comparator
 import java.util.regex.Pattern
 
-import org.junit.{Test, BeforeClass, AfterClass}
-import org.junit.Assert.assertEquals
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
 
 class LoadTests extends ReplTest {
   import LoadTests._, ReplCompilerTests._
@@ -75,10 +75,10 @@ object LoadTests {
 
   private var dir: Path = null
 
-  @BeforeClass def setupDir: Unit =
+  @BeforeAll def setupDir: Unit =
     dir = Files.createTempDirectory("repl_load_src")
 
-  @AfterClass def removeDir: Unit =
+  @AfterAll def removeDir: Unit =
     Files.walk(dir).sorted(Comparator.reverseOrder).forEach(Files.delete)
     dir = null
 

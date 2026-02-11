@@ -1,7 +1,7 @@
 package dotty.tools.scaladoc.renderers
 
-import org.junit.{Test, Rule}
-import org.junit.Assert.{assertSame, assertTrue, assertEquals}
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.{assertSame, assertTrue, assertEquals}
 import dotty.tools.scaladoc.util.HTML._
 
 class HtmlTagsTest {

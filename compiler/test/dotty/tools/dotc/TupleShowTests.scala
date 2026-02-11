@@ -5,7 +5,7 @@ import core.*, Decorators.*, Symbols.*
 import printing.Texts.*
 
 import java.lang.System.{ lineSeparator => EOL }
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class TupleShowTests extends DottyTest:
   def IntType = defn.IntType

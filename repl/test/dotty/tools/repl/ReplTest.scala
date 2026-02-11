@@ -19,8 +19,8 @@ import scala.collection.mutable.ArrayBuffer
 
 import dotc.core.Contexts.Context
 import dotc.reporting.MessageRendering
-import org.junit.{After, Before}
-import org.junit.Assert._
+import org.junit.jupiter.api.{AfterEach, BeforeEach}
+import org.junit.jupiter.api.Assertions._
 
 class ReplTest(options: Array[String] = ReplTest.defaultOptions, out: ByteArrayOutputStream = new ByteArrayOutputStream)
 extends ReplDriver(options, new PrintStream(out, true, StandardCharsets.UTF_8.name)) with MessageRendering:
@@ -32,11 +32,11 @@ extends ReplDriver(options, new PrintStream(out, true, StandardCharsets.UTF_8.na
   }
 
   /** Make sure the context is new before each test */
-  @Before def init(): Unit =
+  @BeforeEach def init(): Unit =
     resetToInitial()
 
   /** Reset the stored output */
-  @After def cleanup: Unit =
+  @AfterEach def cleanup: Unit =
     storedOutput()
 
   def initially[A](op: State ?=> A): A = op(using initialState)

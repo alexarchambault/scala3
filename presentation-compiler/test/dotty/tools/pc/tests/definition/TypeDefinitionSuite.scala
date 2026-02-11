@@ -8,8 +8,7 @@ import dotty.tools.pc.base.BasePcDefinitionSuite
 import dotty.tools.pc.utils.MockEntries
 
 import org.eclipse.lsp4j.Location
-import org.junit.Test
-import org.junit.Ignore
+import org.junit.jupiter.api.*
 
 class TypeDefinitionSuite extends BasePcDefinitionSuite:
 
@@ -217,7 +216,7 @@ class TypeDefinitionSuite extends BasePcDefinitionSuite:
          |""".stripMargin
     )
 
-  @Ignore
+  @Disabled
   @Test def `string` =
     check(
       """|object Main {

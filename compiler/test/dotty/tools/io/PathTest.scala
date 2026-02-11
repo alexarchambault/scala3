@@ -1,6 +1,6 @@
 package dotty.tools.io
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class PathTest {
   // Ref https://github.com/scala/scala3/issues/11644#issuecomment-792457275

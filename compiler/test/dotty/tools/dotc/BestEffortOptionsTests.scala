@@ -9,7 +9,7 @@ import scala.concurrent.duration.*
 import scala.language.unsafeNulls
 
 import java.io.{File => JFile}
-import org.junit.{AfterClass, Test}
+import org.junit.jupiter.api.*
 
 class BestEffortOptionsTests {
   import ParallelTesting.*
@@ -50,7 +50,7 @@ object BestEffortOptionsTests extends ParallelTesting {
   def failedTests = TestReporter.lastRunFailedTests
 
   implicit val summaryReport: SummaryReporting = new SummaryReport
-  @AfterClass def tearDown(): Unit = {
+  @AfterAll def tearDown(): Unit = {
     super.cleanup()
     summaryReport.echoSummary()
   }

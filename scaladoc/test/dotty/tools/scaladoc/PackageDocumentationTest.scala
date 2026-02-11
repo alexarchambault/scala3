@@ -1,13 +1,13 @@
 package dotty.tools.scaladoc
 
-import org.junit.Assert._
+import dotty.Assertions._
 import com.vladsch.flexmark.util.{ast => mdu, sequence}
 import com.vladsch.flexmark.{ast => mda}
 import scala.jdk.CollectionConverters._
-
+import java.io.File
 
 class PackageDocumentationTest extends ScaladocTest("packageobjdocs"):
-  override def runTest: Unit = withModule { module =>
+  override def runTest(tempDir: File): Unit = withModule(tempDir) { module =>
     module.members.values.find {
       case member if member.kind == Kind.Package => true
       case _ => false

@@ -1,8 +1,8 @@
 package dotty.tools.scaladoc
 package site
 
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions._
 import dotty.tools.scaladoc.site.Sidebar
 import dotty.tools.scaladoc.site.Sidebar.RawInput
 import java.io.ByteArrayOutputStream

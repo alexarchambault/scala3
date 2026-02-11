@@ -2,7 +2,7 @@ package dotty.tools.languageserver.util.actions
 
 import dotty.tools.languageserver.util.{PositionContext, SymInfo}
 import org.eclipse.lsp4j.WorkspaceSymbolParams
-import org.junit.Assert.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 
 import scala.jdk.CollectionConverters._
 

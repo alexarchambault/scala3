@@ -5,8 +5,8 @@ package core
 import Contexts.*, Decorators.*, Denotations.*, SymDenotations.*, Symbols.*, Types.*
 import printing.Formatting.Show
 
-import org.junit.Test
-import org.junit.Assert.*
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.*
 
 class ShowDecoratorTest extends DottyTest:
   import ShowDecoratorTest.*

@@ -5,8 +5,8 @@ package printing
 import core.*, Contexts.*, Decorators.*, Names.*, Symbols.*
 import ast.tpd.*
 
-import org.junit.Test
-import org.junit.Assert.*
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.*
 
 class PrinterTests extends DottyTest {
   override def initializeCtx(fc: FreshContext) = super.initializeCtx(fc.setSetting(fc.settings.color, "never"))

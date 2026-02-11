@@ -2,7 +2,7 @@ package dotty.tools.pc.tests.inlayHints
 
 import dotty.tools.pc.base.BaseInlayHintsSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 class InlayHintsSuite extends BaseInlayHintsSuite {
 
   @Test def `local` =

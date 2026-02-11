@@ -4,12 +4,13 @@ package linking
 import scala.jdk.CollectionConverters._
 import scala.Function.const
 import dotty.tools.scaladoc.ScaladocTest
+import java.io.File
 
 abstract class DriTest(testName: String) extends ScaladocTest(testName):
   // override for additional assertions
   def assertOnDRIs(dris: Seq[DRI]): Unit = ()
 
-  override def runTest = withModule { module =>
+  override def runTest(tempDir: File) = withModule(tempDir) { module =>
     val dris = module.members.keys.toSeq
 
     val grouping = dris.groupMapReduce(identity)(const(1))(_+_)

@@ -2,7 +2,7 @@ package dotty.tools.pc.tests.highlight
 
 import dotty.tools.pc.base.BaseDocumentHighlightSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class DocumentHighlightSuite extends BaseDocumentHighlightSuite:
 

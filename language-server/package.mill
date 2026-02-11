@@ -22,6 +22,9 @@ trait LanguageServer extends CrossScala3Module {
   def testSrc = Task.Source("test")
 
   object test extends Scala3Tests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      build.`test-helpers`(crossValue)
+    )
     def libraryPrecomputedRunClasspath: T[Seq[String]] =
       build.library(crossValue).precomputedRunClasspath
     def libraryRunClasspath: T[Seq[PathRef]] =

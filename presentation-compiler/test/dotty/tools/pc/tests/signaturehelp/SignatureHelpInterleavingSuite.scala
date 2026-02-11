@@ -2,8 +2,8 @@ package dotty.tools.pc.tests.signaturehelp
 
 import dotty.tools.pc.base.BaseSignatureHelpSuite
 
-import org.junit.Test
-import org.junit.Ignore
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Disabled
 import java.nio.file.Path
 
 class SignatureHelpInterleavingSuite extends BaseSignatureHelpSuite:
@@ -386,7 +386,7 @@ class SignatureHelpInterleavingSuite extends BaseSignatureHelpSuite:
         |""".stripMargin
     )
 
-  @Ignore("""Clause interleaving is still experimental. It lifts this tree into series of anonymous functions, which all have the same span.
+  @Disabled("""Clause interleaving is still experimental. It lifts this tree into series of anonymous functions, which all have the same span.
              It requires further investigation to determine whether this is a bug in the compiler.""")
   @Test def `clause-interleaving-empty` =
     check(
@@ -399,7 +399,7 @@ class SignatureHelpInterleavingSuite extends BaseSignatureHelpSuite:
          |""".stripMargin
     )
 
-  @Ignore("""Clause interleaving is still experimental. It lifts this tree into series of anonymous functions, which all have the same span.
+  @Disabled("""Clause interleaving is still experimental. It lifts this tree into series of anonymous functions, which all have the same span.
              It requires further investigation to determine whether this is a bug in the compiler.""")
   @Test def `more-interleaved-params-1` =
     check(
@@ -423,7 +423,7 @@ class SignatureHelpInterleavingSuite extends BaseSignatureHelpSuite:
          |""".stripMargin
     )
 
-  @Ignore("""Clause interleaving is still experimental. It lifts this tree into series of anonymous functions, which all have the same span.
+  @Disabled("""Clause interleaving is still experimental. It lifts this tree into series of anonymous functions, which all have the same span.
              It requires further investigation to determine whether this is a bug in the compiler.""")
   @Test def `more-interleaved-params-3` =
     check(
@@ -447,7 +447,7 @@ class SignatureHelpInterleavingSuite extends BaseSignatureHelpSuite:
          |""".stripMargin
     )
 
-  @Ignore("""Clause interleaving is still experimental. It lifts this tree into series of anonymous functions, which all have the same span.
+  @Disabled("""Clause interleaving is still experimental. It lifts this tree into series of anonymous functions, which all have the same span.
              It requires further investigation to determine whether this is a bug in the compiler.""")
   @Test def `more-interleaved-params-5` =
     check(

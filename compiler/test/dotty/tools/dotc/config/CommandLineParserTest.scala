@@ -3,8 +3,8 @@ package dotty.tools.dotc.config
 
 import scala.language.unsafeNulls
 
-import org.junit.Assert.{assertEquals, assertTrue}
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.{assertEquals, assertTrue}
+import org.junit.jupiter.api.Test
 
 class CommandLineParserTest:
   import CommandLineParser.tokenize
@@ -14,7 +14,7 @@ class CommandLineParserTest:
   private def checkFails(input: String, output: String): Unit =
     var txt: String = null
     val res = tokenize(input, msg => txt = msg)
-    assertTrue(s"Expected bad tokenization for [$input] but result was [$res]", txt ne null)
+    assertTrue(txt ne null, s"Expected bad tokenization for [$input] but result was [$res]")
     assertEquals(output, txt)
 
   @Test def parserTokenizes() =

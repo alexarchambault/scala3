@@ -7,9 +7,7 @@ import scala.language.unsafeNulls
 import java.io.{File => JFile}
 import java.nio.file.{Files, Path, Paths}
 
-import org.junit.Assume.assumeTrue
-import org.junit.{AfterClass, Test}
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.{util => _, *}
 
 import scala.concurrent.duration._
 import reporting.TestReporter
@@ -24,7 +22,7 @@ class IdempotencyTests {
   // ignore flaky tests
   val filter = FileFilter.NoFilter
 
-  @Category(Array(classOf[SlowTests]))
+  @Tag("slow")
   @Test def idempotency: Unit = {
     implicit val testGroup: TestGroup = TestGroup("idempotency")
     val opt = defaultOptions
@@ -80,7 +78,7 @@ object IdempotencyTests extends ParallelTesting {
   def failedTests = TestReporter.lastRunFailedTests
 
   implicit val summaryReport: SummaryReporting = new SummaryReport
-  @AfterClass def tearDown(): Unit = {
+  @AfterAll def tearDown(): Unit = {
     super.cleanup()
     summaryReport.echoSummary()
   }

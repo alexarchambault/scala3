@@ -135,6 +135,9 @@ trait Compiler extends CrossScala3Module { outer =>
   def mainClass = Some("dotty.tools.dotc.Main")
 
   object test extends Scala3Tests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      build.`test-helpers`(crossValue)
+    )
     def testSources = outer.testSources
     def compileResources = Task {
       super.compileResources() ++ outer.testResources()
@@ -145,7 +148,7 @@ trait Compiler extends CrossScala3Module { outer =>
 
     def testArgsDefault = super.testArgsDefault() ++ Seq(
       "--run-listener=dotty.tools.ContextEscapeDetector",
-      "--exclude-categories=dotty.VulpixMetaTests"
+      "--exclude-tags=VulpixMeta"
     )
     def testSandboxWorkingDir = false
 

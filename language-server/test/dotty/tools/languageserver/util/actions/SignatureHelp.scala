@@ -7,7 +7,7 @@ import dotty.tools.languageserver.util.embedded.CodeMarker
 import dotty.tools.dotc.util.Signatures.Signature
 
 import org.eclipse.lsp4j.{MarkupContent, ParameterInformation, SignatureInformation}
-import org.junit.Assert.{assertEquals, assertFalse, assertTrue}
+import dotty.Assertions.{assertEquals, assertFalse, assertTrue}
 
 import scala.jdk.CollectionConverters._
 

@@ -4,7 +4,7 @@ package dotc
 
 import scala.language.unsafeNulls
 
-import org.junit.{AfterClass, Test}
+import org.junit.jupiter.api.*
 import reporting.TestReporter
 import vulpix._
 
@@ -52,7 +52,7 @@ object FromTastyTests extends ParallelTesting {
   def failedTests = TestReporter.lastRunFailedTests
 
   implicit val summaryReport: SummaryReporting = new SummaryReport
-  @AfterClass def tearDown(): Unit = {
+  @AfterAll def tearDown(): Unit = {
     super.cleanup()
     summaryReport.echoSummary()
   }

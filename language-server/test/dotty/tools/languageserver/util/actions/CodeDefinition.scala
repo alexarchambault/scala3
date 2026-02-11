@@ -5,7 +5,7 @@ import dotty.tools.languageserver.util.embedded.CodeMarker
 
 import scala.jdk.CollectionConverters._
 
-import org.junit.Assert.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 
 /**
  * An action requesting for the definition of the symbol inside `range`.

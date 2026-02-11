@@ -1,7 +1,6 @@
 package dotty.tools.languageserver
 
-import org.junit.Test
-import org.junit.Ignore
+import org.junit.jupiter.api.*
 
 import dotty.tools.languageserver.util.Code._
 
@@ -246,7 +245,7 @@ class HoverTest {
       .hover(m3 to m4, hoverContent("Double"))
   }
 
-  @Ignore
+  @Disabled
   @Test def annotation: Unit = {
     code"""|@${m1}deprecated${m2} def ${m3}x${m4} = 42.0"""
       .hover(m1 to m2, hoverContent("deprecated"))

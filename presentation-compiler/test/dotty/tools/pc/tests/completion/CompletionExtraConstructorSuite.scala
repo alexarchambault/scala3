@@ -4,7 +4,7 @@ import scala.language.unsafeNulls
 
 import dotty.tools.pc.base.BaseCompletionSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class CompletionExtraConstructorSuite extends BaseCompletionSuite:
 

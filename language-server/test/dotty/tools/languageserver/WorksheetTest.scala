@@ -1,6 +1,6 @@
 package dotty.tools.languageserver
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.eclipse.lsp4j.{CompletionItemKind, DocumentHighlightKind, SymbolKind}
 
 import dotty.tools.dotc.core.StdNames.nme.WorksheetWrapper

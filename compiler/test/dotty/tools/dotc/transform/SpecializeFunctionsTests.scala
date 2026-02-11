@@ -4,7 +4,7 @@ package transform
 
 import scala.language.unsafeNulls
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 import dotty.tools.backend.jvm.DottyBytecodeTest
 

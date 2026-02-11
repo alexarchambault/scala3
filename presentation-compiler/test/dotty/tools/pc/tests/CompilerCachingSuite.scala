@@ -3,7 +3,7 @@ package dotty.tools.pc.tests
 import dotty.tools.dotc.core.Contexts.Context
 import dotty.tools.pc.base.BasePCSuite
 import dotty.tools.pc.ScalaPresentationCompiler
-import org.junit.{Before, Test}
+import org.junit.jupiter.api.*
 
 import scala.language.unsafeNulls
 import scala.meta.internal.metals.CompilerOffsetParams
@@ -44,7 +44,7 @@ class CompilerCachingSuite extends BasePCSuite:
 
   private def emptyQueryContext = PcQueryContext(None, () => "")(using EmptyReportContext())
 
-  @Before
+  @BeforeEach
   def beforeEach: Unit =
     presentationCompiler.restart()
 

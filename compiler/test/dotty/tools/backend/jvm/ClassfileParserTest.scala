@@ -3,8 +3,8 @@ package dotty.tools.backend.jvm
 // painful to do Java reflection stuff without this
 import scala.language.unsafeNulls
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 import java.lang.reflect.Member
 

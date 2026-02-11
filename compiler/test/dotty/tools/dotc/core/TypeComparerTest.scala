@@ -5,8 +5,8 @@ package core
 import Contexts.*, Decorators.*, Denotations.*, SymDenotations.*, Symbols.*, Types.*
 import printing.Formatting.Show
 
-import org.junit.Test
-import org.junit.Assert.*
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.*
 
 class TypeComparerTest extends DottyTest:
   val LongType = defn.LongType
@@ -20,23 +20,23 @@ class TypeComparerTest extends DottyTest:
 
   def identityL[A: Show](op: String, fn: (A, A) => A)(a: A, id: A) =
     val x = fn(id, a)
-    assertEquals(i"$op(id=$id, $a) = $x, expected $a (left identity)", a, x)
+    assertEquals(a, x, i"$op(id=$id, $a) = $x, expected $a (left identity)")
 
   def identityR[A: Show](op: String, fn: (A, A) => A)(a: A, id: A) =
     val x = fn(a, id)
-    assertEquals(i"$op($a, id=$id) = $x, expected $a (right identity)", a, x)
+    assertEquals(a, x, i"$op($a, id=$id) = $x, expected $a (right identity)")
 
   // glb(a, b) = x such that x <: a, x <: b, & forAll y, y <: a, y <: b ==> y <: x
   def glb(a: Type, b: Type) =
     val x = TypeComparer.glb(a, b)
-    assertTrue(i"glb($a, $b) = $x, but $x !<: $a", x <:< a)
-    assertTrue(i"glb($a, $b) = $x, but $x !<: $b", x <:< b)
+    assertTrue(x <:< a, i"glb($a, $b) = $x, but $x !<: $a")
+    assertTrue(x <:< b, i"glb($a, $b) = $x, but $x !<: $b")
     x
 
   // lub(a, b) = x such that a <: x, b <: x, & forAll y, a <: y, b <: y ==> x <: y
   def lub(a: Type, b: Type) =
     val x = TypeComparer.lub(a, b)
-    assertTrue(i"lub($a, $b) = $x, but $a !<: $x", a <:< x)
-    assertTrue(i"lub($a, $b) = $x, but $b !<: $x", b <:< x)
+    assertTrue(a <:< x, i"lub($a, $b) = $x, but $a !<: $x")
+    assertTrue(b <:< x, i"lub($a, $b) = $x, but $b !<: $x")
     x
 end TypeComparerTest

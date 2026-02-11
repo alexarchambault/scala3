@@ -8,8 +8,8 @@ import Annotations.*
 
 import dotty.tools.dotc.util.Spans.Span
 
-import org.junit.Test
-import org.junit.Assert.*
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.*
 
 class TypeTestsCastsTest extends DottyTest:
   val defn = ctx.definitions; import defn.*

@@ -3,9 +3,8 @@ package tools.dotc
 
 import scala.language.unsafeNulls
 
-import org.junit.Test
-import org.junit.Assert._
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions._
 import interfaces._
 import scala.collection.mutable.ListBuffer
 import java.nio.file._
@@ -21,7 +20,7 @@ import java.nio.file._
  *
  *  @see [[OtherEntryPointsTest]]
  */
-@Category(Array(classOf[BootstrappedOnlyTests]))
+@Tag("BootstrappedOnly")
 class InterfaceEntryPointTest {
   @Test def runCompilerFromInterface = {
     val sources =
@@ -47,9 +46,9 @@ class InterfaceEntryPointTest {
     // Run the compiler by calling dotty.tools.dotc.Main.process
     process.invoke(null, args.toArray, reporter, callback)
 
-    assertEquals("Number of errors", 0, reporter.errorCount)
-    assertEquals("Number of warnings", 0, reporter.warningCount)
-    assertEquals("Compiled sources", sources, callback.paths)
+    assertEquals(0, reporter.errorCount, "Number of errors")
+    assertEquals(0, reporter.warningCount, "Number of warnings")
+    assertEquals(sources, callback.paths, "Compiled sources")
   }
 
   private class CustomSimpleReporter extends SimpleReporter {

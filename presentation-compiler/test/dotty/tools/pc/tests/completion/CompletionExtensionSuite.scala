@@ -2,7 +2,7 @@ package dotty.tools.pc.tests.completion
 
 import dotty.tools.pc.base.BaseCompletionSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class CompletionExtensionSuite extends BaseCompletionSuite:
 

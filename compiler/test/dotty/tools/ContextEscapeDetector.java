@@ -1,17 +1,17 @@
 package dotty.tools;
 
-import org.junit.runner.Result;
-import org.junit.runner.notification.RunListener;
-import org.junit.Assert;
+import org.junit.platform.launcher.TestExecutionListener;
+import org.junit.platform.launcher.TestPlan;
+import org.junit.jupiter.api.Assertions;
 import java.lang.ref.WeakReference;
 
-public class ContextEscapeDetector extends RunListener {
+public class ContextEscapeDetector implements TestExecutionListener {
 
     //context can be captured by objects, eg NoDenotation
     public static final int CONTEXTS_ALLOWED = 1;
 
     @Override
-    public void testRunFinished(Result result) throws Exception {
+    public void testPlanExecutionFinished(TestPlan testPlan) {
         if (contextsAlive() > CONTEXTS_ALLOWED) {
             forceGCHeuristic0();
             if (contextsAlive() > CONTEXTS_ALLOWED) {
@@ -25,12 +25,11 @@ public class ContextEscapeDetector extends RunListener {
                         for (ContextEscapeDetection.TestContext ref : ContextEscapeDetection.contexts) {
                             if (ref.context.get() != null) names.append(ref.testName).append(' ');
                         }
-                        Assert.fail("Multiple contexts survived test suite: " + names.toString());
+                        Assertions.fail("Multiple contexts survived test suite: " + names.toString());
                     }
                 }
             }
         }
-        super.testRunFinished(result);
     }
 
     private static synchronized int contextsAlive() {

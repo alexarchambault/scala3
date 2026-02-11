@@ -6,8 +6,8 @@ import scala.language.unsafeNulls
 import java.io.File
 import java.nio.file.Files
 
-import org.junit.{ After, AfterClass, BeforeClass, Test }
-import org.junit.Assert._
+import org.junit.jupiter.api.Assertions._
+import org.junit.jupiter.api.{AfterAll, AfterEach, BeforeAll, Test}
 import dotty.tools.io.{ Directory, PlainDirectory }
 import dotc.core.Contexts._
 import dotc.reporting.{ ErrorMessagesTest, StoreReporter }
@@ -15,13 +15,13 @@ import dotc.reporting.{ ErrorMessagesTest, StoreReporter }
 object ShadowingBatchTests:
   val dir = Directory(Files.createTempDirectory("batch-shadow"))
 
-  @BeforeClass def suiteStarting: Unit = dir.createDirectory()
-  @AfterClass  def suiteFinished: Unit = dir.deleteRecursively()
+  @BeforeAll def suiteStarting: Unit = dir.createDirectory()
+  @AfterAll  def suiteFinished: Unit = dir.deleteRecursively()
 
 class ShadowingBatchTests extends ErrorMessagesTest:
   import ShadowingBatchTests._
 
-  @After def testFinished: Unit = dir.list.foreach(_.deleteRecursively())
+  @AfterEach def testFinished: Unit = dir.list.foreach(_.deleteRecursively())
 
   val compiler = new dotty.tools.dotc.Compiler()
 

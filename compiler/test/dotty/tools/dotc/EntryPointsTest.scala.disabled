@@ -2,8 +2,8 @@ package dotty
 package tools
 package dotc
 
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions._
 import interfaces.{CompilerCallback, SourceFile}
 import reporting._
 import reporting.Diagnostic

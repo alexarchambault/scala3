@@ -12,7 +12,7 @@ import scala.meta.internal.metals.CompilerVirtualFileParams
 import scala.meta.internal.metals.EmptyCancelToken
 import scala.meta.internal.pc.PcReferencesRequest
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class PcReferencesSuite extends BasePCSuite with RangeReplace {
   def check(

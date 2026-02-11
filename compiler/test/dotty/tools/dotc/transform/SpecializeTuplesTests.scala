@@ -2,7 +2,7 @@ package dotty.tools
 package dotc
 package transform
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 import dotty.tools.backend.jvm.DottyBytecodeTest
 

@@ -6,7 +6,7 @@ import dotty.tools.io._
 import scala.io.Codec
 import util._
 import Tokens._, Scanners._
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ScannerTest extends DottyTest {
 

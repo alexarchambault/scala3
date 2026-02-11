@@ -2,8 +2,8 @@ package dotty.tools
 package dotc
 package ast
 
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions._
 
 import dotc.core.Contexts._
 import dotc.parsing.Parsers.Parser

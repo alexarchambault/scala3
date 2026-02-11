@@ -2,8 +2,8 @@ package dotty.tools.dotc.profile
 
 import java.io.*
 
-import org.junit.Assert.*
-import org.junit.*
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.*
 import java.nio.file.Files
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.locks.LockSupport

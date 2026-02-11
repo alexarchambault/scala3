@@ -2,7 +2,7 @@ package dotty.tools.pc.tests
 
 import dotty.tools.pc.base.BaseSelectionRangeSuite
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class SelectionRangeSuite extends BaseSelectionRangeSuite:
 

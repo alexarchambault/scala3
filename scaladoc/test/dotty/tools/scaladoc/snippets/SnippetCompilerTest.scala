@@ -1,8 +1,8 @@
 package dotty.tools.scaladoc
 package snippets
 
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import dotty.Assertions._
 import dotty.tools.io.{AbstractFile, VirtualDirectory}
 
 class SnippetCompilerTest {

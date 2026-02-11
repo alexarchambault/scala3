@@ -2,12 +2,9 @@ package dotty.tools.pc.tests.completion
 
 import dotty.tools.pc.base.BaseCompletionSuite
 
-import org.junit.FixMethodOrder
-import org.junit.Test
-import org.junit.Ignore
-import org.junit.runners.MethodSorters
+import org.junit.jupiter.api.*
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(classOf[MethodOrderer.MethodName])
 class CompletionArgSuite extends BaseCompletionSuite:
 
   // In scala3, we get NoSymbol for `assert`, so we get no completions here.
@@ -1175,7 +1172,7 @@ class CompletionArgSuite extends BaseCompletionSuite:
       topLines = Some(1),
     )
 
-  @Ignore
+  @Disabled
   @Test def `comparison` =
     check(
       """

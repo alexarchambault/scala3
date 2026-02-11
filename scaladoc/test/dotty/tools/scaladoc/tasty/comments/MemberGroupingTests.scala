@@ -2,10 +2,11 @@ package dotty.tools.scaladoc
 package tasty
 package comments
 
-import org.junit.{Test, Rule}
-import org.junit.Assert.{assertSame, assertTrue, assertEquals}
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.{assertSame, assertTrue, assertEquals}
 import com.vladsch.flexmark.util.{ast => mdu, sequence}
 import com.vladsch.flexmark.{ast => mda}
+import java.io.File
 
 import wiki.WikiDocElement
 
@@ -31,7 +32,7 @@ abstract class MemberGroupingTests(syntax: String) extends ScaladocTest("groups"
     "bazz" -> 10
   )
 
-  override def runTest = withModule { module =>
+  override def runTest(tempDir: File) = withModule(tempDir) { module =>
     val memberGroups = module.members.values.flatMap { member =>
       member.docs.flatMap(_.group).map(g => member.name -> g)
     }.toMap

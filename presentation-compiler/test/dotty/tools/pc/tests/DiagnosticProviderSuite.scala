@@ -4,7 +4,7 @@ import dotty.tools.pc.base.BaseDiagnosticsSuite
 import org.eclipse.lsp4j.CodeAction
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.DiagnosticSeverity
-import org.junit.Test
+import org.junit.jupiter.api.*
 
 import java.net.URI
 import scala.meta.internal.jdk.CollectionConverters.*

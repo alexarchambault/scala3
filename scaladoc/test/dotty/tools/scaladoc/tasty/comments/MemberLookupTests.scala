@@ -3,8 +3,8 @@ package tasty.comments
 
 import scala.quoted.*
 
-import org.junit.{Test, Rule}
-import org.junit.Assert.{assertSame, assertTrue}
+import org.junit.jupiter.api.Test
+import dotty.Assertions.{assertSame, assertTrue}
 import dotty.tools.scaladoc.tasty.util._
 
 class LookupTestCases[Q <: Quotes](val q: Quotes) {

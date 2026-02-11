@@ -165,8 +165,8 @@ def toolArgsParse(lines: List[String], filename: Option[String]): List[(String,S
     case _ => Nil
   }
 
-import org.junit.Test
-import org.junit.Assert._
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions._
 
 class ToolArgsTest:
   @Test def `missing toolarg is absent`: Unit = assertEquals(Nil, toolArgsParse(List(""), None))

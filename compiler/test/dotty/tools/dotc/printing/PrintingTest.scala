@@ -19,7 +19,7 @@ import interfaces.Diagnostic.INFO
 import dotty.tools.io.Directory
 
 import scala.io.Source
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import scala.util.Using
 import java.io.File
 

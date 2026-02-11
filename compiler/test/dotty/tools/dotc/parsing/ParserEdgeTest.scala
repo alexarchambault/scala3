@@ -5,7 +5,7 @@ package parsing
 import ast.untpd._
 import core.Constants._
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ParserEdgeTest extends ParserTest {
   //

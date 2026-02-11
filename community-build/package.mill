@@ -19,8 +19,8 @@ object `package` extends Scala3Module {
     }
 
     def testArgsDefault = super.testArgsDefault() ++ Seq(
-      "--include-categories=dotty.communitybuild.TestCategory",
-      "--run-listener=dotty.communitybuild.FailureSummarizer"
+      "--include-categories=dotty.communitybuild.TestCategory"
+      // "--run-listener=dotty.communitybuild.FailureSummarizer"
     )
   }
 }

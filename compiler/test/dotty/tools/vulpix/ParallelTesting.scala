@@ -1161,7 +1161,7 @@ trait ParallelTesting extends RunnerOrchestration:
     val shouldFail: Boolean,
     val shouldSuppressOutput: Boolean
   ) {
-    import org.junit.Assert.fail
+    import org.junit.jupiter.api.Assertions.fail
 
     def this(target: TestSource) =
       this(List(target), 1, true, None, false, false)

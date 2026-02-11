@@ -1,7 +1,7 @@
 package dotty.tools;
 
 import dotty.tools.dotc.core.Contexts;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 import java.lang.ref.WeakReference;
 import java.util.LinkedList;
@@ -24,12 +24,12 @@ public abstract class ContextEscapeDetection {
 
     public abstract void clearCtx();
 
-    @Before
+    @BeforeEach
     public synchronized void stealContext() {
         contexts.add(new TestContext(new WeakReference<Contexts.Context>(this.getCtx()), this.getClass().getName()));
     }
 
-    @After
+    @AfterEach
     public synchronized void clearContext() {
         this.clearCtx();
     }

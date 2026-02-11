@@ -62,7 +62,7 @@ trait Scala3Module extends Scala3JavaModule with ScalaModule { outer =>
     def scalaCompilerClasspath = outer.scalaCompilerClasspath
 
     def testArgsDefault = Task {
-      val extraArgs = if (buildType.isBootstrapping) Seq("--exclude-categories=dotty.BootstrappedOnlyTests") else Nil
+      val extraArgs = if (buildType.isBootstrapping) Seq("--exclude-tags=BootstrappedOnly") else Nil
       super.testArgsDefault() ++ extraArgs
     }
   }

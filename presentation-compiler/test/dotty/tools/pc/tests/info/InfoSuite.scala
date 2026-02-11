@@ -7,7 +7,7 @@ import scala.meta.pc.PcSymbolProperty
 import scala.meta.pc.PcSymbolInformation
 import dotty.tools.pc.base.BasePCSuite
 import scala.language.unsafeNulls
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import scala.meta.internal.metals.CompilerOffsetParams
 import java.nio.file.Paths
 import scala.annotation.nowarn
