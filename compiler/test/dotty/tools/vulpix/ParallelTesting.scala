@@ -34,6 +34,7 @@ import dotc.config.Config
 import dotc.util.{DiffUtil, SourceFile, SourcePosition, Spans, NoSourcePosition}
 import io.AbstractFile
 import dotty.tools.vulpix.TestConfiguration.defaultOptions
+import org.junit.jupiter.api.DynamicTest
 
 /** A parallel testing suite whose goal is to integrate nicely with JUnit
  *
@@ -1179,6 +1180,31 @@ trait ParallelTesting extends RunnerOrchestration:
       shouldSuppressOutput: Boolean = shouldSuppressOutput): CompilationTest =
         CompilationTest(targets, times, shouldDelete, threadLimit, shouldFail, shouldSuppressOutput)
 
+    def split(): Seq[CompilationTest] =
+      targets.map(target => copy(List(target)))
+
+    def dynamicTests(run: CompilationTest => Unit): java.util.Collection[DynamicTest] =
+      targets
+        .map { target =>
+          val test0 = copy(List(target))
+          DynamicTest.dynamicTest(
+            target.title,
+            () => run(test0)
+          )
+        }
+        .asJava
+
+    def namedDynamicTests(name: String)(run: CompilationTest => Unit): java.util.Collection[DynamicTest] =
+      targets
+        .map { target =>
+          val test0 = copy(List(target))
+          DynamicTest.dynamicTest(
+            s"$name ${target.title}",
+            () => run(test0)
+          )
+        }
+        .asJava
+
     /** Creates a "pos" test run, which makes sure that all tests pass
      *  compilation without generating errors and that they do not crash the
      *  compiler
@@ -1522,12 +1548,13 @@ trait ParallelTesting extends RunnerOrchestration:
    *  - Directories can have an associated check-file, where the check file has
    *    the same name as the directory (with the file extension `.check`)
    */
-  def compileFilesInDir(f: String, flags: TestFlags, fileFilter: FileFilter = FileFilter.NoFilter)(implicit testGroup: TestGroup): CompilationTest = {
+  def compileFilesInDir(f: String, flags: TestFlags, fileFilter: FileFilter = FileFilter.NoFilter, keepDirs: Boolean = true)(implicit testGroup: TestGroup): CompilationTest = {
     val outDir = defaultOutputDir + testGroup + JFile.separator
     val sourceDir = new JFile(f)
     checkRequirements(f, sourceDir, outDir)
 
     val (dirs, files) = compilationTargets(sourceDir, fileFilter)
+    val actualDirs = if (keepDirs) dirs else Nil
 
     val isPicklerTest = flags.options.contains("-Ytest-pickler")
     def picklerDirFilter(source: SeparateCompilationSource): Boolean = {
@@ -1537,7 +1564,7 @@ trait ParallelTesting extends RunnerOrchestration:
     }
     val targets =
       files.map(f => JointCompilationSource(testGroup.name, Array(f), flags, createOutputDirsForFile(f, sourceDir, outDir))) ++
-      dirs.map { dir => SeparateCompilationSource(testGroup.name, dir, flags, createOutputDirsForDir(dir, sourceDir, outDir)) }.filter(picklerDirFilter)
+      actualDirs.map { dir => SeparateCompilationSource(testGroup.name, dir, flags, createOutputDirsForDir(dir, sourceDir, outDir)) }.filter(picklerDirFilter)
 
     // Create a CompilationTest and let the user decide whether to execute a pos or a neg test
     new CompilationTest(targets)
@@ -1605,7 +1632,7 @@ trait ParallelTesting extends RunnerOrchestration:
     // TODO add SeparateCompilationSource from tasty?
 
     // Create a CompilationTest and let the user decide whether to execute a pos or a neg test
-    val generateClassFiles = compileFilesInDir(f, flags0, fromTastyFilter)
+    val generateClassFiles = compileFilesInDir(f, flags0, fromTastyFilter, keepDirs = false)
 
     new TastyCompilationTest(
       generateClassFiles.keepOutput,
@@ -1778,6 +1805,35 @@ trait ParallelTesting extends RunnerOrchestration:
         CompilationTest.aggregateTests(step1, step2).delete()
 
       this
+    }
+
+    def dynamicTests(run: TastyCompilationTest => Unit): java.util.Collection[DynamicTest] = {
+      val targets =
+        if (step1.targets.length > 0 && step2.targets.length == 0)
+          step1.targets.map { step1Target =>
+            (step1Target, Nil)
+          }
+        else {
+          if (step1.targets.length != step2.targets.length) {
+            System.err.println(s"step1.targets.length = ${step1.targets.length}")
+            System.err.println(s"step2.targets.length = ${step2.targets.length}")
+          }
+          assert(step1.targets.length == step2.targets.length)
+          step1.targets.zip(step2.targets).map {
+            case (step1Target, step2Target) =>
+              (step1Target, List(step2Target))
+          }
+        }
+      targets
+        .map {
+          case (step1Target, step2Targets) =>
+            val test0 = new TastyCompilationTest(step1.copy(List(step1Target)), step2.copy(step2Targets), shouldDelete)
+            DynamicTest.dynamicTest(
+              step1Target.title,
+              () => run(test0)
+            )
+        }
+        .asJava
     }
   }
 

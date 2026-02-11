@@ -16,7 +16,7 @@ class FromTastyTests {
   import TestConfiguration._
   import FromTastyTests._
 
-  @Test def posTestFromTasty: Unit = {
+  @TestFactory def posTestFromTasty = {
     // Can be reproduced with
     // > sbt
     // > scalac -Ythrough-tasty -Ycheck:all <source>
@@ -24,10 +24,10 @@ class FromTastyTests {
     implicit val testGroup: TestGroup = TestGroup("posTestFromTasty")
     compileTastyInDir(s"tests${JFile.separator}pos", defaultOptions,
       fromTastyFilter = FileFilter.exclude(TestSources.posFromTastyExcludelisted)
-    ).checkCompile()
+    ).dynamicTests(_.checkCompile())
   }
 
-  @Test def runTestFromTasty: Unit = {
+  @TestFactory def runTestFromTasty = {
     // Can be reproduced with
     // > sbt
     // > scalac -Ythrough-tasty -Ycheck:all <source>
@@ -36,7 +36,7 @@ class FromTastyTests {
     implicit val testGroup: TestGroup = TestGroup("runTestFromTasty")
     compileTastyInDir(s"tests${JFile.separator}run", defaultOptions,
       fromTastyFilter = FileFilter.exclude(TestSources.runFromTastyExcludelisted)
-    ).checkRuns()
+    ).dynamicTests(_.checkRuns())
   }
 }
 
@@ -46,7 +46,7 @@ object FromTastyTests extends ParallelTesting {
   def maxDuration = 30.seconds
   def numberOfWorkers = Runtime.getRuntime().availableProcessors()
   def safeMode = Properties.testsSafeMode
-  def isInteractive = SummaryReport.isInteractive
+  def isInteractive = false
   def testFilter = Properties.testsFilter
   def updateCheckFiles: Boolean = Properties.testsUpdateCheckfile
   def failedTests = TestReporter.lastRunFailedTests

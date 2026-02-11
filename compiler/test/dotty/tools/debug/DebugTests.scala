@@ -13,12 +13,12 @@ import scala.util.control.NonFatal
 
 class DebugTests:
   import DebugTests.*
-  @Test def debug: Unit =
+  @TestFactory def debug =
     implicit val testGroup: TestGroup = TestGroup("debug")
     CompilationTest.aggregateTests(
       compileFile("tests/debug-custom-args/eval-explicit-nulls.scala", TestConfiguration.explicitNullsOptions),
       compileFilesInDir("tests/debug", TestConfiguration.defaultOptions),
-    ).checkDebug()
+    ).dynamicTests(_.checkDebug())
 
 object DebugTests extends ParallelTesting:
   def maxDuration =

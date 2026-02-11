@@ -17,18 +17,18 @@ class ScalaJSCompilationTests {
 
   // Negative tests ------------------------------------------------------------
 
-  @Test def negScalaJS: Unit = {
+  @TestFactory def negScalaJS = {
     implicit val testGroup: TestGroup = TestGroup("negScalaJS")
     aggregateTests(
       compileFilesInDir("tests/neg-scalajs", scalaJSOptions),
-    ).checkExpectedErrors()
+    ).dynamicTests(_.checkExpectedErrors())
   }
 
-  @Test def runScalaJS: Unit = {
+  @TestFactory def runScalaJS = {
     implicit val testGroup: TestGroup = TestGroup("runScalaJS")
     aggregateTests(
       compileFilesInDir("tests/run", scalaJSOptions),
-    ).checkRuns()
+    ).dynamicTests(_.checkRuns())
   }
 }
 

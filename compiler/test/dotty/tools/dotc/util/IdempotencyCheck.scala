@@ -7,13 +7,13 @@ import java.util.stream.Stream as JStream
 import scala.jdk.CollectionConverters.*
 
 object IdempotencyCheck {
-  def checkIdempotency(dir1: String, dir2: String): Unit = {
+  def checkIdempotency(dir1: String, dir2: String): Unit =
+    checkIdempotency(JPaths.get(dir1), JPaths.get(dir2))
+  def checkIdempotency(dir1: JPath, dir2: JPath): Unit = {
     var failed = 0
     var total = 0
-    val dir1Path = JPaths.get(dir1)
-    val dir2Path = JPaths.get(dir2)
-    val dir1String = dir1Path.toString
-    val dir2String= dir2Path.toString
+    val dir1String = dir1.toString
+    val dir2String= dir2.toString
 
     val groupedBytecodeFiles: List[(JPath, JPath, JPath, JPath)] = {
       val bytecodeFiles = {
@@ -22,7 +22,7 @@ object IdempotencyCheck {
           def tupleWithName(f: JPath) = (f.toString.substring(dir.length, f.toString.length - 6), f)
           paths.iterator.asScala.filter(path => isBytecode(path.toString)).map(tupleWithName).toList
         }
-        bytecodeFiles(JFiles.walk(dir1Path), dir1String) ++ bytecodeFiles(JFiles.walk(dir2Path), dir2String)
+        bytecodeFiles(JFiles.walk(dir1), dir1String) ++ bytecodeFiles(JFiles.walk(dir2), dir2String)
       }
       val groups = bytecodeFiles.groupBy(_._1).mapValues(_.map(_._2))
 

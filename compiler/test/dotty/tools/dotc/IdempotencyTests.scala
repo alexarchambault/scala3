@@ -10,6 +10,7 @@ import java.nio.file.{Files, Path, Paths}
 import org.junit.jupiter.api.{util => _, *}
 
 import scala.concurrent.duration._
+import scala.jdk.CollectionConverters.*
 import reporting.TestReporter
 import util.IdempotencyCheck
 import vulpix._
@@ -24,34 +25,53 @@ class IdempotencyTests {
   val filter = FileFilter.NoFilter
 
   @Tag("slow")
-  @Test def idempotency: Unit = {
+  @TestFactory def idempotency = {
     implicit val testGroup: TestGroup = TestGroup("idempotency")
     val opt = defaultOptions
 
-    val posIdempotency = aggregateTests(
-      compileFilesInDir("tests/pos", opt, filter)(using TestGroup("idempotency/posIdempotency1")),
-      compileFilesInDir("tests/pos", opt, filter)(using TestGroup("idempotency/posIdempotency2")),
-    )
+    val posIdempotency = compileFilesInDir("tests/pos", opt, filter)(using TestGroup("idempotency/posIdempotency1")).split()
+      .zip(compileFilesInDir("tests/pos", opt, filter)(using TestGroup("idempotency/posIdempotency2")).split())
 
-    val orderIdempotency = {
-      val tests =
-        for {
-          testDir <- new JFile("tests/order-idempotency").listFiles() if testDir.isDirectory
-        } yield {
-          val sources = TestSources.sources(testDir.toPath)
-          aggregateTests(
-            compileList(testDir.getName, sources, opt)(using TestGroup("idempotency/orderIdempotency1")),
-            compileList(testDir.getName, sources.reverse, opt)(using TestGroup("idempotency/orderIdempotency2"))
-          )
-        }
-      aggregateTests(tests*)
+    val posTests = for ((pos1, pos2) <- posIdempotency) yield {
+      DynamicTest.dynamicTest(
+        pos1.targets.head.title,
+        () =>
+          try {
+            pos1.keepOutput.checkCompile()
+            pos2.keepOutput.checkCompile()
+
+            IdempotencyCheck.checkIdempotency(pos1.targets.head.outDir.toPath, pos2.targets.head.outDir.toPath)
+          }
+          finally {
+            pos1.delete()
+            pos2.delete()
+          }
+      )
     }
 
-    val allTests = aggregateTests(orderIdempotency, posIdempotency)
+    val orderIdempotency =
+      new JFile("tests/order-idempotency").listFiles().toSeq.filter(_.isDirectory).flatMap { testDir =>
+        val sources = TestSources.sources(testDir.toPath)
+        compileList(testDir.getName, sources, opt)(using TestGroup("idempotency/orderIdempotency1")).split()
+          .zip(compileList(testDir.getName, sources, opt)(using TestGroup("idempotency/orderIdempotency2")).split())
+      }
 
-    val tests = allTests.keepOutput.checkCompile()
+    val orderTests = for ((ord1, ord2) <- orderIdempotency) yield {
+      DynamicTest.dynamicTest(
+        ord1.targets.head.title,
+        () =>
+          try {
+            ord1.keepOutput.checkCompile()
+            ord2.keepOutput.checkCompile()
 
-    IdempotencyCheck.checkIdempotency("out/idempotency/orderIdempotency1", "out/idempotency/orderIdempotency2")
+            IdempotencyCheck.checkIdempotency(ord1.targets.head.outDir.toPath, ord2.targets.head.outDir.toPath)
+          }
+          finally {
+            ord1.delete()
+            ord2.delete()
+          }
+      )
+    }
 
     // Disabled until strawman is fixed
     // IdempotencyCheck.checkIdempotency("out/idempotency/strawman0", "out/idempotency/strawman1")
@@ -61,9 +81,7 @@ class IdempotencyTests {
     IdempotencyCheck.checkIdempotency("out/idempotency/strawman1", "out/idempotency/strawman3")
     */
 
-    IdempotencyCheck.checkIdempotency("out/idempotency/posIdempotency1", "out/idempotency/posIdempotency2")
-
-    tests.delete()
+    (posTests ++ orderTests).asJava
   }
 
 }
@@ -74,7 +92,7 @@ object IdempotencyTests extends ParallelTesting {
   def maxDuration = 30.seconds
   def numberOfWorkers = 5
   def safeMode = Properties.testsSafeMode
-  def isInteractive = SummaryReport.isInteractive
+  def isInteractive = false
   def testFilter = Properties.testsFilter
   def updateCheckFiles: Boolean = Properties.testsUpdateCheckfile
   def failedTests = TestReporter.lastRunFailedTests

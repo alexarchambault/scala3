@@ -27,7 +27,7 @@ class CompilationTests {
 
   // Positive tests ------------------------------------------------------------
 
-  @Test def pos: Unit = {
+  @TestFactory def pos = {
     implicit val testGroup: TestGroup = TestGroup("compilePos")
     var tests = List(
       compileFilesInDir("tests/pos", defaultOptions.and("-Wsafe-init", "-Wunused:all", "-Wshadow:private-shadow", "-Wshadow:type-parameter-shadow"), FileFilter.include(TestSources.posLintingAllowlist)),
@@ -53,10 +53,10 @@ class CompilationTests {
     if scala.util.Properties.isJavaAtLeast("16") then
       tests ::= compileFilesInDir("tests/pos-java16+", defaultOptions.and("-Wsafe-init"))
 
-    aggregateTests(tests*).checkCompile()
+    aggregateTests(tests*).dynamicTests(_.checkCompile())
   }
 
-  @Test def rewrites: Unit = {
+  @TestFactory def rewrites = {
     implicit val testGroup: TestGroup = TestGroup("rewrites")
 
     aggregateTests(
@@ -91,10 +91,10 @@ class CompilationTests {
       compileFile("tests/rewrites/i22792.scala", defaultOptions.and("-rewrite")),
       compileFile("tests/rewrites/i23449.scala", defaultOptions.and("-rewrite", "-source:3.4-migration")),
       compileFile("tests/rewrites/i24213.scala", defaultOptions.and("-rewrite", "-source:3.4-migration")),
-    ).checkRewrites()
+    ).dynamicTests(_.checkRewrites())
   }
 
-  @Test def posTwice: Unit = {
+  @TestFactory def posTwice = {
     implicit val testGroup: TestGroup = TestGroup("posTwice")
     aggregateTests(
       compileFilesInDir("tests/pos-java-interop", defaultOptions),
@@ -132,21 +132,21 @@ class CompilationTests {
       compileFile("tests/pos/extmethods.scala", defaultOptions),
       compileFile("tests/pos/companions.scala", defaultOptions),
       compileFile("tests/pos/main.scala", defaultOptions)
-    ).times(2).checkCompile()
+    ).dynamicTests(_.times(2).checkCompile())
   }
 
   // Warning tests ------------------------------------------------------------
 
-  @Test def warn: Unit = {
+  @TestFactory def warn = {
     implicit val testGroup: TestGroup = TestGroup("compileWarn")
     aggregateTests(
       compileFilesInDir("tests/warn", defaultOptions),
-    ).checkWarnings()
+    ).dynamicTests(_.checkWarnings())
   }
 
   // Negative tests ------------------------------------------------------------
 
-  @Test def negAll: Unit = {
+  @TestFactory def negAll = {
     implicit val testGroup: TestGroup = TestGroup("compileNeg")
     aggregateTests(
       compileFilesInDir("tests/neg", defaultOptions, FileFilter.exclude(TestSources.negScala2LibraryTastyExcludelisted)),
@@ -159,17 +159,17 @@ class CompilationTests {
         "tests/neg-custom-args/toplevel-samesource/nested/S.scala"),
         defaultOptions),
       compileFile("tests/neg/i7575.scala", defaultOptions.withoutLanguageFeatures),
-    ).checkExpectedErrors()
+    ).dynamicTests(_.checkExpectedErrors())
   }
 
-  @Test def fuzzyAll: Unit = {
+  @TestFactory def fuzzyAll = {
     implicit val testGroup: TestGroup = TestGroup("compileFuzzy")
-    compileFilesInDir("tests/fuzzy", defaultOptions).checkNoCrash()
+    compileFilesInDir("tests/fuzzy", defaultOptions).dynamicTests(_.checkNoCrash())
   }
 
   // Run tests -----------------------------------------------------------------
 
-  @Test def runAll: Unit = {
+  @TestFactory def runAll = {
     implicit val testGroup: TestGroup = TestGroup("runAll")
     aggregateTests(
       compileFilesInDir("tests/run", defaultOptions.and("-Wsafe-init")),
@@ -177,43 +177,43 @@ class CompilationTests {
       compileFilesInDir("tests/run-custom-args/captures", allowDeepSubtypes.and("-language:experimental.captureChecking", "-language:experimental.separationChecking", "-source", "3.8")),
       // Run tests for legacy lazy vals.
       compileFilesInDir("tests/run", defaultOptions.and("-Wsafe-init", "-Ylegacy-lazy-vals", "-Ycheck-constraint-deps"), FileFilter.include(TestSources.runLazyValsAllowlist)),
-    ).checkRuns()
+    ).dynamicTests(_.checkRuns())
   }
 
   // Generic java signatures tests ---------------------------------------------
 
-  @Test def genericJavaSignatures: Unit = {
+  @TestFactory def genericJavaSignatures = {
     implicit val testGroup: TestGroup = TestGroup("genericJavaSignatures")
-    compileFilesInDir("tests/generic-java-signatures", defaultOptions).checkRuns()
+    compileFilesInDir("tests/generic-java-signatures", defaultOptions).dynamicTests(_.checkRuns())
   }
 
   // Pickling Tests ------------------------------------------------------------
 
-  @Test def pickling: Unit = {
+  @TestFactory def pickling = {
     implicit val testGroup: TestGroup = TestGroup("testPickling")
     aggregateTests(
       compileFilesInDir("tests/pos", picklingOptions, FileFilter.exclude(TestSources.posTestPicklingExcludelisted)),
       compileFilesInDir("tests/run", picklingOptions, FileFilter.exclude(TestSources.runTestPicklingExcludelisted))
-    ).checkCompile()
+    ).dynamicTests(_.checkCompile())
   }
 
   //@Test disabled in favor of posWithCompilerCC to save time.
-  def recheck: Unit =
+  @TestFactory def recheck =
     given TestGroup = TestGroup("recheck")
     aggregateTests(
       compileFilesInDir("tests/run", defaultOptions.and("-Yrecheck-test"), FileFilter.exclude(TestSources.runTestRecheckExcluded))
       //Disabled to save some time.
       //compileFilesInDir("tests/pos", recheckOptions, FileFilter.exclude(TestSources.posTestRecheckExcluded)),
-    ).checkCompile()
+    ).dynamicTests(_.checkCompile())
 
   // Explicit nulls tests
-  @Test def explicitNullsNeg: Unit = {
+  @TestFactory def explicitNullsNeg = {
     implicit val testGroup: TestGroup = TestGroup("explicitNullsNeg")
     aggregateTests(
       compileFilesInDir("tests/explicit-nulls/neg", explicitNullsOptions, FileFilter.exclude(TestSources.negExplicitNullsScala2LibraryTastyExcludelisted)),
       compileFilesInDir("tests/explicit-nulls/flexible-types-common", explicitNullsOptions `and` "-Yno-flexible-types"),
       compileFilesInDir("tests/explicit-nulls/unsafe-common", explicitNullsOptions `and` "-Yno-flexible-types", FileFilter.exclude(TestSources.negExplicitNullsScala2LibraryTastyExcludelisted)),
-    ).checkExpectedErrors()
+    ).dynamicTests(_.checkExpectedErrors())
 
     // locally {
     //   val unsafeFile = compileFile("tests/explicit-nulls/flexible-unpickle/neg/Unsafe_1.scala", explicitNullsOptions without "-Yexplicit-nulls")
@@ -227,13 +227,13 @@ class CompilationTests {
     // }
   }
 
-  @Test def explicitNullsPos: Unit = {
+  @TestFactory def explicitNullsPos = {
     implicit val testGroup: TestGroup = TestGroup("explicitNullsPos")
     aggregateTests(
       compileFilesInDir("tests/explicit-nulls/pos", explicitNullsOptions),
       compileFilesInDir("tests/explicit-nulls/flexible-types-common", explicitNullsOptions),
       compileFilesInDir("tests/explicit-nulls/unsafe-common", explicitNullsOptions `and` "-language:unsafeNulls" `and` "-Yno-flexible-types"),
-    ).checkCompile()
+    ).dynamicTests(_.checkCompile())
 
     // locally {
     //   val tests = List(
@@ -246,56 +246,69 @@ class CompilationTests {
     // }
   }
 
-  @Test def explicitNullsWarn: Unit = {
+  @TestFactory def explicitNullsWarn = {
     implicit val testGroup: TestGroup = TestGroup("explicitNullsWarn")
     compileFilesInDir("tests/explicit-nulls/warn", explicitNullsOptions)
-  }.checkWarnings()
+  }.dynamicTests(_.checkWarnings())
 
-  @Test def explicitNullsRun: Unit = {
+  @TestFactory def explicitNullsRun = {
     implicit val testGroup: TestGroup = TestGroup("explicitNullsRun")
     compileFilesInDir("tests/explicit-nulls/run", explicitNullsOptions)
-  }.checkRuns()
+  }.dynamicTests(_.checkRuns())
 
   // initialization tests for global objects
-  @Test def checkInitGlobal: Unit = {
+  @TestFactory def checkInitGlobal = {
     implicit val testGroup: TestGroup = TestGroup("checkInitGlobal")
-    compileFilesInDir("tests/init-global/warn", defaultOptions.and("-Ysafe-init-global"), FileFilter.exclude(TestSources.negInitGlobalScala2LibraryTastyExcludelisted)).checkWarnings()
-    compileFilesInDir("tests/init-global/pos", defaultOptions.and("-Ysafe-init-global", "-Werror"), FileFilter.exclude(TestSources.posInitGlobalScala2LibraryTastyExcludelisted)).checkCompile()
-    if Properties.usingScalaLibraryTasty && !Properties.usingScalaLibraryCCTasty then
-      compileFilesInDir("tests/init-global/warn-tasty", defaultOptions.and("-Ysafe-init-global"), FileFilter.exclude(TestSources.negInitGlobalScala2LibraryTastyExcludelisted)).checkWarnings()
-      compileFilesInDir("tests/init-global/pos-tasty", defaultOptions.and("-Ysafe-init-global", "-Werror"), FileFilter.exclude(TestSources.posInitGlobalScala2LibraryTastyExcludelisted)).checkCompile()
-    end if
+    val warnTests = compileFilesInDir("tests/init-global/warn", defaultOptions.and("-Ysafe-init-global"), FileFilter.exclude(TestSources.negInitGlobalScala2LibraryTastyExcludelisted))
+      .namedDynamicTests("warnings")(_.checkWarnings())
+      .asScala
+    val posTests = compileFilesInDir("tests/init-global/pos", defaultOptions.and("-Ysafe-init-global", "-Werror"), FileFilter.exclude(TestSources.posInitGlobalScala2LibraryTastyExcludelisted))
+      .namedDynamicTests("compile")(_.checkCompile())
+      .asScala
+    val tastyTests =
+      if Properties.usingScalaLibraryTasty && !Properties.usingScalaLibraryCCTasty then
+        val tastyWarnTests = compileFilesInDir("tests/init-global/warn-tasty", defaultOptions.and("-Ysafe-init-global"), FileFilter.exclude(TestSources.negInitGlobalScala2LibraryTastyExcludelisted))
+          .namedDynamicTests("warnings")(_.checkWarnings())
+          .asScala
+        val tastyPosTests = compileFilesInDir("tests/init-global/pos-tasty", defaultOptions.and("-Ysafe-init-global", "-Werror"), FileFilter.exclude(TestSources.posInitGlobalScala2LibraryTastyExcludelisted))
+          .namedDynamicTests("compile")(_.checkCompile())
+          .asScala
+        tastyWarnTests ++ tastyPosTests
+      else
+        Nil
+      end if
+    (warnTests ++ posTests ++ tastyTests).asJava
+  }
 
-    locally {
-      val group = TestGroup("checkInitGlobal/tastySource")
-      val tastSourceOptions = defaultOptions.and("-Ysafe-init-global")
-      val outDirLib = defaultOutputDir + group + "/A/tastySource/A"
+  @Test def checkInitGlobalTastySource: Unit = {
+    val group = TestGroup("checkInitGlobal/tastySource")
+    val tastSourceOptions = defaultOptions.and("-Ysafe-init-global")
+    val outDirLib = defaultOutputDir + group + "/A/tastySource/A"
 
-      // Set -sourceroot such that the source code cannot be found by the compiler
-      val libOptions = tastSourceOptions.and("-sourceroot", "tests/init-global/special")
-      val lib = compileFile("tests/init-global/special/tastySource/A.scala", libOptions)(using group).keepOutput.checkCompile()
+    // Set -sourceroot such that the source code cannot be found by the compiler
+    val libOptions = tastSourceOptions.and("-sourceroot", "tests/init-global/special")
+    val lib = compileFile("tests/init-global/special/tastySource/A.scala", libOptions)(using group).keepOutput.checkCompile()
 
-      compileFile("tests/init-global/special/tastySource/B.scala", tastSourceOptions.withClasspath(outDirLib))(using group).checkWarnings()
+    compileFile("tests/init-global/special/tastySource/B.scala", tastSourceOptions.withClasspath(outDirLib))(using group).checkWarnings()
 
-      lib.delete()
-    }
+    lib.delete()
   }
 
   // initialization tests
-  @Test def safeInit: Unit = {
+  @TestFactory def safeInit = {
     given TestGroup = TestGroup("safeInit")
     val options = defaultOptions.and("-Wsafe-init", "-Werror")
-    compileFilesInDir("tests/init/neg", options).checkExpectedErrors()
-    compileFilesInDir("tests/init/warn", defaultOptions.and("-Wsafe-init")).checkWarnings()
-    compileFilesInDir("tests/init/pos", options).checkCompile()
-    compileFilesInDir("tests/init/crash", options.without("-Werror")).checkCompile()
+    val neg = compileFilesInDir("tests/init/neg", options).dynamicTests(_.checkExpectedErrors()).asScala
+    val warn = compileFilesInDir("tests/init/warn", defaultOptions.and("-Wsafe-init")).dynamicTests(_.checkWarnings()).asScala
+    val pos = compileFilesInDir("tests/init/pos", options).dynamicTests(_.checkCompile()).asScala
+    val crash = compileFilesInDir("tests/init/crash", options.without("-Werror")).dynamicTests(_.checkCompile()).asScala
     // The regression test for i12128 has some atypical classpath requirements.
     // The test consists of three files: (a) Reflect_1  (b) Macro_2  (c) Test_3
     // which must be compiled separately. In addition:
     //   - the output from (a) must be on the classpath while compiling (b)
     //   - the output from (b) must be on the classpath while compiling (c)
     //   - the output from (a) _must not_ be on the classpath while compiling (c)
-    locally {
+    val i12128 = DynamicTest.dynamicTest("i12128", () => {
       val i12128Group = TestGroup("checkInit/i12128")
       val i12128Options = options.without("-Werror")
       val outDir1 = defaultOutputDir + i12128Group + "/Reflect_1/i12128/Reflect_1"
@@ -308,13 +321,13 @@ class CompilationTests {
       ).map(_.keepOutput.checkCompile())
 
       tests.foreach(_.delete())
-    }
+    })
 
     /* This tests for errors in the program's TASTy trees.
      * The test consists of three files: (a) v1/A, (b) v1/B, and (c) v0/A. (a) and (b) are
      * compatible, but (b) and (c) are not. If (b) and (c) are compiled together, there should be
      * an error when reading the files' TASTy trees. */
-    locally {
+    val tastyErrorValOrDefdef = DynamicTest.dynamicTest("tasty-error val-or-defdef", () => {
       val tastyErrorGroup = TestGroup("checkInit/tasty-error/val-or-defdef")
       val tastyErrorOptions = options.without("-Werror")
 
@@ -331,13 +344,13 @@ class CompilationTests {
       compileFile("tests/init/tasty-error/val-or-defdef/Main.scala", tastyErrorOptions.withClasspath(classA0).withClasspath(classB1))(using tastyErrorGroup).checkExpectedErrors()
 
       tests.foreach(_.delete())
-    }
+    })
 
     /* This tests for errors in the program's TASTy trees.
      * The test consists of five files: Main, C, v1/A, v1/B, and v0/A. The files v1/A, v1/B, and v0/A all depend on C. v1/A and v1/B are
      * compatible, but v1/B and v0/A are not. If v1/B and v0/A are compiled together, there should be
      * an error when reading the files' TASTy trees. This fact is demonstrated by the compilation of Main. */
-    locally {
+    val tastyErrorTypedef = DynamicTest.dynamicTest("tasty-error typedef", () => {
       val tastyErrorGroup = TestGroup("checkInit/tasty-error/typedef")
       val tastyErrorOptions = options.without("-Werror").without("-Ycheck:all")
 
@@ -356,11 +369,13 @@ class CompilationTests {
       compileFile("tests/init/tasty-error/typedef/Main.scala", tastyErrorOptions.withClasspath(classC).withClasspath(classA0).withClasspath(classB1))(using tastyErrorGroup).checkExpectedErrors()
 
       tests.foreach(_.delete())
-    }
+    })
+
+    (neg ++ warn ++ pos ++ crash ++ Seq(i12128, tastyErrorValOrDefdef, tastyErrorTypedef)).asJava
   }
 
   // parallel backend tests
-  @Test def parallelBackend: Unit = {
+  @TestFactory def parallelBackend = {
     given TestGroup = TestGroup("parallelBackend")
     val parallelism = Runtime.getRuntime().availableProcessors().min(16)
     assumeTrue("Not enough available processors to run parallel tests", parallelism > 1)
@@ -369,7 +384,7 @@ class CompilationTests {
     def parCompileDir(directory: String) = compileDir(directory, options)
 
     // Compilation units containing more than 1 source file
-    aggregateTests(
+    val compileTests = aggregateTests(
       parCompileDir("tests/pos/i10477"),
       parCompileDir("tests/pos/i4758"),
       parCompileDir("tests/pos/scala2traits"),
@@ -377,18 +392,19 @@ class CompilationTests {
       parCompileDir("tests/pos/tailcall"),
       parCompileDir("tests/pos/reference"),
       parCompileDir("tests/pos/pos_valueclasses")
-    ).checkCompile()
+    ).dynamicTests(_.checkCompile()).asScala
 
-    aggregateTests(
+    val expectErrorsTests = aggregateTests(
       parCompileDir("tests/neg/package-implicit"),
       parCompileDir("tests/neg/package-export")
-    ).checkExpectedErrors()
+    ).dynamicTests(_.checkExpectedErrors()).asScala
 
-    aggregateTests(
+    val checkRunTests = aggregateTests(
       parCompileDir("tests/run/decorators"),
       parCompileDir("tests/run/generic")
-    ).checkRuns()
+    ).dynamicTests(_.checkRuns()).asScala
 
+    (compileTests ++ expectErrorsTests ++ checkRunTests).asJava
   }
 }
 
@@ -398,7 +414,7 @@ object CompilationTests extends ParallelTesting {
   def maxDuration = 45.seconds
   def numberOfWorkers = Runtime.getRuntime().availableProcessors()
   def safeMode = Properties.testsSafeMode
-  def isInteractive = SummaryReport.isInteractive
+  def isInteractive = false
   def testFilter = Properties.testsFilter
   def updateCheckFiles: Boolean = Properties.testsUpdateCheckfile
   def failedTests = TestReporter.lastRunFailedTests
