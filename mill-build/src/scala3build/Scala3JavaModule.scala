@@ -11,12 +11,28 @@ trait Scala3JavaModule extends JavaModule with PublishModule with Mima {
     def sources = testSources
     def testParallelism = false
 
-    def testFramework = "com.github.sbt.junit.jupiter.api.JupiterFramework"
+    def useMunit: Boolean = false
+
+    def testFramework =
+      if (useMunit) "munit.Framework"
+      else "com.github.sbt.junit.jupiter.api.JupiterFramework"
     def mvnDeps = super.mvnDeps() ++ Seq(
       mvn"com.github.sbt.junit:jupiter-interface:0.17.0",
       mvn"org.junit.platform:junit-platform-launcher:1.14.1",
-      mvn"org.junit.jupiter:junit-jupiter-api:${Versions.junitJupiter}"
+      mvn"org.junit.jupiter:junit-jupiter-api:${Versions.junitJupiter}",
+      mvn"org.scalameta::munit::1.2.1"
+        .exclude(("org.scala-lang", "scala-library"))
+        .exclude(("org.scala-lang", "scala3-library_3"))
     )
+
+    def discoveredTestClasses =
+      if (useMunit) super[TestModule].discoveredTestClasses
+      else super[Junit5].discoveredTestClasses
+
+    def enableBsp =
+      // only exposing the base test module to BSP
+      // both this one and the munit one have the same dependencies anyway
+      super.enableBsp && !useMunit
   }
 
   def jvmId = "17" // force external zinc worker

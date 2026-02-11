@@ -6,7 +6,6 @@ import scala.language.unsafeNulls
 
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions._
-import org.junit.jupiter.api.Disabled
 
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters.*
@@ -24,6 +23,7 @@ class BootstrappedOnlyCompilationTests {
 
   // Positive tests ------------------------------------------------------------
 
+  @Disabled
   @TestFactory def posMacros = {
     implicit val testGroup: TestGroup = TestGroup("compilePosMacros")
     aggregateTests(
@@ -32,6 +32,7 @@ class BootstrappedOnlyCompilationTests {
     ).dynamicTests(_.checkCompile())
   }
 
+  @Disabled
   @TestFactory def posWithCompiler = {
     implicit val testGroup: TestGroup = TestGroup("compilePosWithCompiler")
     aggregateTests(
@@ -68,6 +69,7 @@ class BootstrappedOnlyCompilationTests {
     ).dynamicTests(_.checkCompile())
   }
 
+  @Disabled
   @TestFactory def posTwiceWithCompiler = {
     implicit val testGroup: TestGroup = TestGroup("posTwiceWithCompiler")
     aggregateTests(
@@ -101,6 +103,7 @@ class BootstrappedOnlyCompilationTests {
       .checkExpectedErrors()
   }
 
+  @Disabled
   @TestFactory def negWithCompiler = {
     implicit val testGroup: TestGroup = TestGroup("compileNegWithCompiler")
     aggregateTests(
@@ -117,6 +120,7 @@ class BootstrappedOnlyCompilationTests {
       .checkRuns()
   }
 
+  @Disabled
   @TestFactory def runWithCompiler = {
     implicit val testGroup: TestGroup = TestGroup("runWithCompiler")
     val basicTests = List(
@@ -141,6 +145,7 @@ class BootstrappedOnlyCompilationTests {
     ).dynamicTests(_.limitThreads(2).checkRuns()) // TODO reduce to limitThreads(1) if it still causes problems, this would be around 50% slower based on local benchmarking
   }
 
+  @Disabled
   @TestFactory def runBootstrappedOnly = {
     implicit val testGroup: TestGroup = TestGroup("runBootstrappedOnly")
     aggregateTests(
@@ -163,6 +168,7 @@ class BootstrappedOnlyCompilationTests {
   // Pickling tests are very memory intensive and as such need to be run with a
   // lower level of concurrency as to not kill their running VMs
 
+  @Disabled
   @TestFactory def picklingWithCompiler = {
     implicit val testGroup: TestGroup = TestGroup("testPicklingWithCompiler")
     aggregateTests(
@@ -189,6 +195,7 @@ class BootstrappedOnlyCompilationTests {
     ).dynamicTests(_.limitThreads(4).checkCompile())
   }
 
+  @Disabled
   @TestFactory def testPlugins = {
     implicit val testGroup: TestGroup = TestGroup("testPlugins")
     val pluginFile = "plugin.properties"

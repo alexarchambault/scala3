@@ -76,7 +76,7 @@ trait PresentationCompiler extends CrossScala3Module {
     "-Yexplicit-nulls", "-Wsafe-init"
   )
 
-  object test extends Scala3Tests {
+  trait PresentationCompilerTests extends Scala3Tests {
     def moduleDeps = super.moduleDeps ++ Seq(
       build.`presentation-compiler-testcases`(crossValue)
     )
@@ -126,6 +126,10 @@ trait PresentationCompiler extends CrossScala3Module {
         )
       super.runClasspath()
     }
+  }
+  object test extends PresentationCompilerTests
+  object munit extends PresentationCompilerTests {
+    def useMunit = true
   }
 }
 

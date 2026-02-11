@@ -134,7 +134,7 @@ trait Compiler extends CrossScala3Module { outer =>
 
   def mainClass = Some("dotty.tools.dotc.Main")
 
-  object test extends Scala3Tests {
+  trait CompilerTests extends Scala3Tests {
     def moduleDeps = super.moduleDeps ++ Seq(
       build.`test-helpers`(crossValue)
     )
@@ -176,7 +176,8 @@ trait Compiler extends CrossScala3Module { outer =>
         s"-Ddotty.tests.classes.jlineReader=${artifactFor("jline-reader")}",
         s"-Ddotty.tests.classes.dottyStaging=${build.staging(crossValue).jar().path}",
         s"-Ddotty.tests.classes.dottyTastyInspector=${build.`tasty-inspector`(crossValue).jar().path}",
-        s"-Ddotty.tools.dotc.semanticdb.test=${BuildCtx.workspaceRoot / "tests/semanticdb"}"
+        s"-Ddotty.tools.dotc.semanticdb.test=${BuildCtx.workspaceRoot / "tests/semanticdb"}",
+        s"-Ddotty.tools.dotc.isBootstrapped=${!buildType.isBootstrapping}"
       )
     }
 
@@ -189,6 +190,11 @@ trait Compiler extends CrossScala3Module { outer =>
       val (localCp, managedCp) = super.runClasspath().partition(_.path.startsWith(BuildCtx.workspaceRoot))
       localCp ++ managedCp
     }
+  }
+
+  object test extends CompilerTests
+  object munit extends CompilerTests {
+    def useMunit = true
   }
 }
 

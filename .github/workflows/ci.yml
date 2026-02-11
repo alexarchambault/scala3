@@ -113,12 +113,12 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     needs: compile-all
-    name: ${{ matrix.BUILD_TYPE }}
+    name: ${{ matrix.BUILD_TYPE }}-${{ matrix.TEST }}
     strategy:
       fail-fast: false
       matrix:
         BUILD_TYPE: ["bootstrapping", "final"]
-        TEST: ["test", "full-test"]
+        TEST: ["test", "munit", "full-test"]
     timeout-minutes: 120
     steps:
     - uses: actions/checkout@v5

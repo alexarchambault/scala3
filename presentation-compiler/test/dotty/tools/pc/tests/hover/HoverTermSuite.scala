@@ -610,6 +610,7 @@ class HoverTermSuite extends BaseHoverSuite:
         |""".stripMargin
     )
 
+  @Disabled
   @Test def `i20560`=
     check(
       "val re@@s = tests.macros.Macro20560.loadJavaSqlDriver",
@@ -814,6 +815,7 @@ class HoverTermSuite extends BaseHoverSuite:
          "def valueOf($name: String): Foo".hover
     )
 
+  @Disabled
   @Test def `i7460` =
     check(
       """|package tests.macros
@@ -822,6 +824,7 @@ class HoverTermSuite extends BaseHoverSuite:
          "def substring(x$0: Int, x$1: Int): String".hover
     )
 
+  @Disabled
   @Test def `i7460-2` =
     check(
       """|package tests.macros

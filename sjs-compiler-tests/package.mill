@@ -9,7 +9,7 @@ trait SjsCompilerTests extends CrossScala3Module {
 
   def testSrc = Task.Source("test/scala")
 
-  object test extends Scala3Tests {
+  trait SjsCompilerTestsTests extends Scala3Tests {
     def moduleDeps = super.moduleDeps ++ Seq(
       build.compiler(crossValue).test
     )
@@ -42,6 +42,11 @@ trait SjsCompilerTests extends CrossScala3Module {
           s"-Ddotty.tests.classes.scalaJSLibrary=${libraryJsArtifactFor("scalajs-library_2.13")}"
         )
     }
+  }
+
+  object test extends SjsCompilerTestsTests
+  object munit extends SjsCompilerTestsTests {
+    def useMunit = true
   }
 }
 

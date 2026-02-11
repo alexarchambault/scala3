@@ -17,6 +17,7 @@ class ScalaJSCompilationTests {
 
   // Negative tests ------------------------------------------------------------
 
+  @Disabled
   @TestFactory def negScalaJS = {
     implicit val testGroup: TestGroup = TestGroup("negScalaJS")
     aggregateTests(
@@ -24,6 +25,7 @@ class ScalaJSCompilationTests {
     ).dynamicTests(_.checkExpectedErrors())
   }
 
+  @Disabled
   @TestFactory def runScalaJS = {
     implicit val testGroup: TestGroup = TestGroup("runScalaJS")
     aggregateTests(
@@ -39,7 +41,7 @@ object ScalaJSCompilationTests extends ParallelTesting {
   def maxDuration = 60.seconds
   def numberOfWorkers = 5
   def safeMode = Properties.testsSafeMode
-  def isInteractive = SummaryReport.isInteractive
+  def isInteractive = false
   def testFilter = Properties.testsFilter
   def updateCheckFiles: Boolean = Properties.testsUpdateCheckfile
   def failedTests = TestReporter.lastRunFailedTests

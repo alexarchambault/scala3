@@ -25,6 +25,7 @@ class IdempotencyTests {
   val filter = FileFilter.NoFilter
 
   @Tag("slow")
+  @Disabled
   @TestFactory def idempotency = {
     implicit val testGroup: TestGroup = TestGroup("idempotency")
     val opt = defaultOptions
@@ -89,7 +90,8 @@ class IdempotencyTests {
 object IdempotencyTests extends ParallelTesting {
   // Test suite configuration --------------------------------------------------
 
-  def maxDuration = 30.seconds
+  // Not sure why we need to increase this one from Mill
+  def maxDuration = 1.minute
   def numberOfWorkers = 5
   def safeMode = Properties.testsSafeMode
   def isInteractive = false

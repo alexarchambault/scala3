@@ -57,6 +57,8 @@ object Properties {
    */
   val testsSafeMode: Boolean = sys.props.isDefinedAt("dotty.tests.safemode")
 
+  val testsIsBootstrapped: Boolean = java.lang.Boolean.getBoolean("dotty.tools.dotc.isBootstrapped")
+
   /** Extra directory containing sources for the compiler */
   def dottyCompilerManagedSources: Path = Paths.get(prop("dotty.tests.dottyCompilerManagedSources"))
 

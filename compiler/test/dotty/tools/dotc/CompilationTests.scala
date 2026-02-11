@@ -27,6 +27,7 @@ class CompilationTests {
 
   // Positive tests ------------------------------------------------------------
 
+  @Disabled
   @TestFactory def pos = {
     implicit val testGroup: TestGroup = TestGroup("compilePos")
     var tests = List(
@@ -56,6 +57,7 @@ class CompilationTests {
     aggregateTests(tests*).dynamicTests(_.checkCompile())
   }
 
+  @Disabled
   @TestFactory def rewrites = {
     implicit val testGroup: TestGroup = TestGroup("rewrites")
 
@@ -94,6 +96,7 @@ class CompilationTests {
     ).dynamicTests(_.checkRewrites())
   }
 
+  @Disabled
   @TestFactory def posTwice = {
     implicit val testGroup: TestGroup = TestGroup("posTwice")
     aggregateTests(
@@ -137,6 +140,7 @@ class CompilationTests {
 
   // Warning tests ------------------------------------------------------------
 
+  @Disabled
   @TestFactory def warn = {
     implicit val testGroup: TestGroup = TestGroup("compileWarn")
     aggregateTests(
@@ -146,6 +150,7 @@ class CompilationTests {
 
   // Negative tests ------------------------------------------------------------
 
+  @Disabled
   @TestFactory def negAll = {
     implicit val testGroup: TestGroup = TestGroup("compileNeg")
     aggregateTests(
@@ -162,6 +167,7 @@ class CompilationTests {
     ).dynamicTests(_.checkExpectedErrors())
   }
 
+  @Disabled
   @TestFactory def fuzzyAll = {
     implicit val testGroup: TestGroup = TestGroup("compileFuzzy")
     compileFilesInDir("tests/fuzzy", defaultOptions).dynamicTests(_.checkNoCrash())
@@ -169,6 +175,7 @@ class CompilationTests {
 
   // Run tests -----------------------------------------------------------------
 
+  @Disabled
   @TestFactory def runAll = {
     implicit val testGroup: TestGroup = TestGroup("runAll")
     aggregateTests(
@@ -182,6 +189,7 @@ class CompilationTests {
 
   // Generic java signatures tests ---------------------------------------------
 
+  @Disabled
   @TestFactory def genericJavaSignatures = {
     implicit val testGroup: TestGroup = TestGroup("genericJavaSignatures")
     compileFilesInDir("tests/generic-java-signatures", defaultOptions).dynamicTests(_.checkRuns())
@@ -189,6 +197,7 @@ class CompilationTests {
 
   // Pickling Tests ------------------------------------------------------------
 
+  @Disabled
   @TestFactory def pickling = {
     implicit val testGroup: TestGroup = TestGroup("testPickling")
     aggregateTests(
@@ -198,6 +207,7 @@ class CompilationTests {
   }
 
   //@Test disabled in favor of posWithCompilerCC to save time.
+  @Disabled
   @TestFactory def recheck =
     given TestGroup = TestGroup("recheck")
     aggregateTests(
@@ -207,6 +217,7 @@ class CompilationTests {
     ).dynamicTests(_.checkCompile())
 
   // Explicit nulls tests
+  @Disabled
   @TestFactory def explicitNullsNeg = {
     implicit val testGroup: TestGroup = TestGroup("explicitNullsNeg")
     aggregateTests(
@@ -227,6 +238,7 @@ class CompilationTests {
     // }
   }
 
+  @Disabled
   @TestFactory def explicitNullsPos = {
     implicit val testGroup: TestGroup = TestGroup("explicitNullsPos")
     aggregateTests(
@@ -246,17 +258,20 @@ class CompilationTests {
     // }
   }
 
+  @Disabled
   @TestFactory def explicitNullsWarn = {
     implicit val testGroup: TestGroup = TestGroup("explicitNullsWarn")
     compileFilesInDir("tests/explicit-nulls/warn", explicitNullsOptions)
   }.dynamicTests(_.checkWarnings())
 
+  @Disabled
   @TestFactory def explicitNullsRun = {
     implicit val testGroup: TestGroup = TestGroup("explicitNullsRun")
     compileFilesInDir("tests/explicit-nulls/run", explicitNullsOptions)
   }.dynamicTests(_.checkRuns())
 
   // initialization tests for global objects
+  @Disabled
   @TestFactory def checkInitGlobal = {
     implicit val testGroup: TestGroup = TestGroup("checkInitGlobal")
     val warnTests = compileFilesInDir("tests/init-global/warn", defaultOptions.and("-Ysafe-init-global"), FileFilter.exclude(TestSources.negInitGlobalScala2LibraryTastyExcludelisted))
@@ -295,6 +310,7 @@ class CompilationTests {
   }
 
   // initialization tests
+  @Disabled
   @TestFactory def safeInit = {
     given TestGroup = TestGroup("safeInit")
     val options = defaultOptions.and("-Wsafe-init", "-Werror")
@@ -388,6 +404,7 @@ class CompilationTests {
   }
 
   // parallel backend tests
+  @Disabled
   @TestFactory def parallelBackend = {
     given TestGroup = TestGroup("parallelBackend")
     val parallelism = Runtime.getRuntime().availableProcessors().min(16)

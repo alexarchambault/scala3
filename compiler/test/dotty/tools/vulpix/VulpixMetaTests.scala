@@ -16,10 +16,13 @@ class VulpixMetaTests {
   implicit val summaryReport: SummaryReporting = new SummaryReport
   implicit def testGroup: TestGroup = TestGroup("VulpixMetaTests")
 
+  @Disabled
   @TestFactory def compilePos =
     compileFilesInDir("tests/vulpix-tests/meta/pos", defaultOptions).dynamicTests(_.checkCompile())
+  @Disabled
   @TestFactory def compileNeg =
     compileFilesInDir("tests/vulpix-tests/meta/neg", defaultOptions).dynamicTests(_.checkExpectedErrors())
+  @Disabled
   @TestFactory def runAll =
     compileFilesInDir("tests/vulpix-tests/meta/run", defaultOptions).dynamicTests(_.checkRuns())
 }

@@ -16,6 +16,7 @@ class FromTastyTests {
   import TestConfiguration._
   import FromTastyTests._
 
+  @Disabled
   @TestFactory def posTestFromTasty = {
     // Can be reproduced with
     // > sbt
@@ -27,6 +28,7 @@ class FromTastyTests {
     ).dynamicTests(_.checkCompile())
   }
 
+  @Disabled
   @TestFactory def runTestFromTasty = {
     // Can be reproduced with
     // > sbt

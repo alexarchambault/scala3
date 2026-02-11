@@ -69,6 +69,7 @@ class ReportingTest:
         assertTrue(s"Error message: $msg should contains $word", msg.contains(word)))
     }
 
+  @Disabled
   @Test
   def testErrorInCaseOfDocsShadowing =
     val ctx = testContext

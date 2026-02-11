@@ -131,7 +131,7 @@ trait Scaladoc extends CrossScala3Module { scaladoc =>
     )
   }
 
-  object test extends Scala3Tests {
+  trait ScaladocTests extends Scala3Tests {
     def moduleDeps = super.moduleDeps ++ Seq(
       build.`test-helpers`(crossValue)
     )
@@ -148,6 +148,11 @@ trait Scaladoc extends CrossScala3Module { scaladoc =>
         )
       super.runClasspath()
     }
+  }
+
+  object test extends ScaladocTests
+  object munit extends ScaladocTests {
+    def useMunit = true
   }
 
   def testSourceLinksSrc = Task.Source("test-source-links")
