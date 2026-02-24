@@ -1,0 +1,37 @@
+package build.`scaladoc-js`
+
+import scala3build.*
+
+import mill.*
+import mill.scalalib.*
+
+object `package` extends Module {
+  trait Common extends CrossScala3Module with Scala3JsModule {
+    def moduleDeps = Seq(
+      build.`library-js`.`library-3`()
+    )
+    def mvnDeps = Seq(
+      mvn"org.scala-js::scalajs-dom::2.8.0"
+    )
+
+    def css = Task.Source("css")
+  }
+  object common extends Cross[Common](Mode.allValues)
+
+  trait Contributors extends CrossScala3Module with Scala3JsModule {
+    def moduleDeps = Seq(
+      common()
+    )
+    def css = Task.Source("css")
+  }
+  object contributors extends Cross[Contributors](Mode.allValues)
+
+  trait Main extends CrossScala3Module with Scala3JsModule {
+    def moduleDeps = Seq(
+      common()
+    )
+
+    object test extends Scala3JsTests
+  }
+  object main extends Cross[Main](Mode.allValues)
+}
