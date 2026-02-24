@@ -1,0 +1,133 @@
+package build.library
+
+import scala3build.*
+
+import com.github.lolgab.mill.mima.*
+import io.github.alexarchambault.millmissinglink.*
+import mill.*
+import mill.scalalib.*
+
+import java.io.File
+
+trait Library extends SharedLibrarySettings with mill.scala3buildhelper.CompileClassesPathHelper with Scala3Mima with MissingLink {
+
+  def artifactId = artifactName()
+  def artifactName = "scala-library" + (if (mode == Mode.Bootstrapping) "-bootstrapping" else "")
+
+  def scalacOptions = super.scalacOptions() ++ Seq(
+    "-sourcepath", sources().map(_.path).distinct.mkString(File.pathSeparator)
+  )
+
+  def libraryPropertiesResourceDir = Task {
+
+    val shellBanner: String =
+      """%n      ________ ___   / /  ___
+        |%n    / __/ __// _ | / /  / _ |
+        |%n  __\\ \\/ /__/ __ |/ /__/ __ |
+        |%n /____/\\___/_/ |_/____/_/ | |
+        |%n                          |/  %s""".stripMargin.replace("\n", "")
+
+    val contents =
+      s"""version.number=${publishVersion()}
+          |maven.version.number=${publishVersion()}
+          |copyright.string=Copyright 2002-${Util.currentYear}, LAMP/EPFL
+          |shell.banner=$shellBanner
+          |""".stripMargin
+    os.write(Task.dest / "library.properties", contents)
+    PathRef(Task.dest)
+  }
+
+  def resources = Task {
+    super.resources() ++ Seq(libraryPropertiesResourceDir())
+  }
+
+  def testResources = Task.Sources("test-resources")
+
+  def patches = Task {
+    Seq(build.`library-2`.compile().classes)
+  }
+
+  private def jarSubPath =
+    os.sub / s"scala-library-${Versions.dottyVersion}.jar"
+
+  // Ensuring the JAR name has a shape that zinc or other tools expect
+  def jar = Task {
+    val jar0 = super.jar()
+    val dest = Task.dest / jarSubPath
+    os.copy(jar0.path, dest)
+    PathRef(dest)
+  }
+
+  def runClasspath =
+    Task {
+      Seq(jar())
+    }
+
+  /**
+   * Compute expected run class path, but don't compute its content
+   *
+   * Useful for source generation, where we want the run class path but don't want to trigger compilation
+   */
+  def precomputedRunClasspath: T[Seq[String]] =
+    Task {
+      Seq((jarPath(Task.dest) / jarSubPath).toString)
+    }
+
+  def mimaForwardIssueFilters =
+    MiMaFilters.Scala3Library.ForwardsBreakingChanges
+  def mimaBackwardIssueFilters =
+    MiMaFilters.Scala3Library.BackwardsBreakingChanges
+
+  def missinglinkCheck(): Task.Command[Unit] = Task.Command {
+
+    val conflicts = missinglinkConflicts()
+
+    val filteredConflicts = conflicts.filterNot { conflict =>
+      MissingLinkFilters.excludedClassFiles.contains(
+        conflict.dependency().fromClass().getClassName()
+      )
+    }
+
+    if (filteredConflicts.isEmpty)
+      System.err.println(s"No conflicts found, filtered out ${conflicts.size} problems.")
+    else {
+      val filteredTotal = filteredConflicts.length
+      Task.log.error(s"$filteredTotal conflicts found!")
+      outputConflicts(filteredConflicts)
+      Task.fail(s"There were $filteredTotal conflicts")
+    }
+  }
+
+  object test extends Scala3Tests {
+    def resources = testResources
+
+    def mvnDeps = Seq(
+      mvn"org.scalacheck::scalacheck:1.19.0".exclude("org.scala-lang" -> "*")
+    )
+
+    def scalacOptions = Task {
+      val baseOptions = super.scalacOptions()
+      val sourcePathIdx = baseOptions.indexOf("-sourcepath")
+      if (sourcePathIdx >= 0)
+        // drop -sourcepath and the argument right after
+        baseOptions.take(sourcePathIdx) ++ baseOptions.drop(sourcePathIdx + 2)
+      else {
+        System.err.println(s"Warning: couldn't find -sourcepath option in main module scalac options")
+        baseOptions
+      }
+    }
+  }
+}
+
+object `package` extends Cross[Library](Mode.allValues) {
+
+  // this module is empty / has no sources
+  trait Library3 extends CrossScala3Module {
+    def artifactName = "scala3-library" + (if (mode == Mode.Bootstrapping) "-bootstrapping" else "")
+    def moduleDeps = Seq(
+      build.library()
+    )
+  }
+
+  object `library-3` extends Cross[Library3](Mode.allValues)
+}
