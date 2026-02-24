@@ -1,3 +1,5 @@
+// This file is used in the Mill build too. Do not modify this comment.
+
 import sbt._
 
 /** A dependency shared between multiple projects should be put here
