@@ -58,7 +58,7 @@ extends ReplDriver(options, new PrintStream(out, true, StandardCharsets.UTF_8.na
   def testScript(name: => String, str: String): Unit =
     testScript(name, str.linesIterator.toList).foreach(fail)
 
-  private def testFile(f: JFile): Option[String] =
+  def testFile(f: JFile): Option[String] =
     testScript(f.toString, readLines(f), Some(f))
 
   /** Returns failures: None if all is well, Some for an error */
