@@ -41,7 +41,7 @@ private def insertClasspathInArgs(args: List[String], cp: String): List[String] 
 
 /** Runs scalac built from sources */
 def scalac(args0: String*): Task.Command[Unit] = {
-  val mode = Mode.Bootstrapping
+  val mode = Mode.NonBootstrapped
   val project = build.compiler(mode)
   val withCompilerExtraClassPath =
     if (args0.contains("-with-compiler"))
@@ -118,7 +118,7 @@ def publishLocal(
   sources: Boolean = true,
   doc: Boolean = false // much faster without this
 ): Task.Command[Unit] = {
-  val projects0 = projects(Mode.Final)
+  val projects0 = projects(Mode.Bootstrapped)
   val tasks = Task.traverse(projects0)(_.publishLocal(localIvyRepo = localIvyRepo, sources = sources, doc = doc))
   Task.Command {
     tasks()
@@ -141,7 +141,7 @@ def testCompilation(
   @arg(doc = "substring of the path of the tests file")
   filter: Args
 ): Task.Command[Unit] =
-  build.compiler(Mode.Final).testCompilation(
+  build.compiler(Mode.Bootstrapped).testCompilation(
     fromTasty = fromTasty,
     updateCheckfiles = updateCheckfiles,
     failed = failed,
