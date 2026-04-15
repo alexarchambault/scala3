@@ -112,7 +112,8 @@ trait Library extends SharedLibrarySettings with mill.scala3buildhelper.CompileC
   }
 }
 
-object `package` extends Cross[Library](Mode.allValues) {
+object `package` extends Library with CrossHelper[Library] {
+  object `non-bootstrapped` extends Library with CrossHelper.NonBootstrapped
 
   // this module is empty / has no sources
   trait Library3 extends CrossScala3Module {
@@ -124,5 +125,7 @@ object `package` extends Cross[Library](Mode.allValues) {
     def isCoreModule = true
   }
 
-  object `library-3` extends Cross[Library3](Mode.allValues)
+  object `library-3` extends Library3 with CrossHelper[Library3] {
+    object `non-bootstrapped` extends Library3 with CrossHelper.NonBootstrapped
+  }
 }

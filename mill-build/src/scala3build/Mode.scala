@@ -1,7 +1,5 @@
 package scala3build
 
-import mill.api.Cross
-
 /**
  * Enum for the two stages to build compiler-related JARs: non-bootstrapped and bootstrapped
  */
@@ -26,6 +24,3 @@ object Mode:
     NonBootstrapped,
     Bootstrapped
   )
-
-  given Cross.ToSegments[Mode] =
-    new Cross.ToSegments(mode => List(mode.name))

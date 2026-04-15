@@ -12,21 +12,21 @@ object `package` extends Scala3Module {
   // NonBootstrapped mode, so that we can import that module in IDEs seamlessly
   def mode = Mode.NonBootstrapped
   def moduleDeps = Seq(
-    build.library(Mode.NonBootstrapped)
+    build.library.`non-bootstrapped`
   )
 
   def prepareCommunityBuild(): Task.Command[Unit] = Task.Command {
-    build.`sbt-bridge`(Mode.Bootstrapped).publishLocal()()
+    build.`sbt-bridge`.publishLocal()()
     build.interfaces.publishLocal()()
-    build.tasty(Mode.Bootstrapped).publishLocal()()
-    build.library(Mode.Bootstrapped).publishLocal()()
-    build.library.`library-3`(Mode.Bootstrapped).publishLocal()()
-    build.`tasty-inspector`(Mode.Bootstrapped).publishLocal()()
-    build.scaladoc(Mode.Bootstrapped).publishLocal()()
-    build.repl(Mode.Bootstrapped).publishLocal()()
-    build.compiler(Mode.Bootstrapped).publishLocal()()
-    build.`library-js`(Mode.Bootstrapped).publishLocal()()
-    build.`library-js`.`library-3`(Mode.Bootstrapped).publishLocal()()
+    build.tasty.publishLocal()()
+    build.library.publishLocal()()
+    build.library.`library-3`.publishLocal()()
+    build.`tasty-inspector`.publishLocal()()
+    build.scaladoc.publishLocal()()
+    build.repl.publishLocal()()
+    build.compiler.publishLocal()()
+    build.`library-js`.publishLocal()()
+    build.`library-js`.`library-3`.publishLocal()()
 
     val sbtInjectPluginsFile = test.forkWorkingDir() / "sbt-injected-plugins"
     os.write.over(
