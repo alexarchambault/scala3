@@ -26,7 +26,7 @@ trait Staging extends CrossScala3Module:
     }
 
     def testArgsDefault = Task {
-      val bootstrapOnlyArgs = if (mode == Mode.Bootstrapping) Seq("--exclude-categories=dotty.BootstrappedOnlyTests") else Nil
+      val bootstrapOnlyArgs = if (mode == Mode.NonBootstrapped) Seq("--exclude-categories=dotty.BootstrappedOnlyTests") else Nil
       super.testArgsDefault() ++ bootstrapOnlyArgs
     }
 

@@ -12,7 +12,7 @@ import java.io.File
 trait Library extends SharedLibrarySettings with mill.scala3buildhelper.CompileClassesPathHelper with Scala3Mima with MissingLink {
 
   def artifactId = artifactName()
-  def artifactName = "scala-library" + (if (mode == Mode.Bootstrapping) "-bootstrapping" else "")
+  def artifactName = "scala-library" + (if (mode == Mode.NonBootstrapped) "-non-bootstrapped" else "")
 
   def scalacOptions = super.scalacOptions() ++ Seq(
     "-sourcepath", sources().map(_.path).distinct.mkString(File.pathSeparator)
@@ -116,7 +116,7 @@ object `package` extends Cross[Library](Mode.allValues) {
 
   // this module is empty / has no sources
   trait Library3 extends CrossScala3Module {
-    def artifactName = "scala3-library" + (if (mode == Mode.Bootstrapping) "-bootstrapping" else "")
+    def artifactName = "scala3-library" + (if (mode == Mode.NonBootstrapped) "-non-bootstrapped" else "")
     def moduleDeps = Seq(
       build.library()
     )

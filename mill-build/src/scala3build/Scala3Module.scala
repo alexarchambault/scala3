@@ -11,15 +11,15 @@ import scala.annotation.tailrec
  * Tasks for Scala modules in the Scala 3 build.
  *
  * Beyond what [[Scala3JavaModule]] adds, this deals with setting up
- * the library, compiler, compiler bridge, and scaladoc, when bootstrapping and
- * for final modules. This also sets some shared scalac options.
+ * the library, compiler, compiler bridge, and scaladoc, when non-bootstrapped and
+ * for bootstrapped modules. This also sets some shared scalac options.
  */
 trait Scala3Module extends Scala3JavaModule, ScalaModule:
   outer =>
-  def mode: Mode = Mode.Final
+  def mode: Mode = Mode.Bootstrapped
 
   def sourcesFolders = super.sourcesFolders ++ Seq(
-    if (mode == Mode.Bootstrapping) "src-non-bootstrapped" else "src-bootstrapped"
+    if (mode == Mode.NonBootstrapped) "src-non-bootstrapped" else "src-bootstrapped"
   )
 
   def resolutionParams = Task.Anon {
@@ -30,35 +30,35 @@ trait Scala3Module extends Scala3JavaModule, ScalaModule:
   }
 
   def scalaVersion =
-    if (mode == Mode.Bootstrapping) Versions.referenceVersion
+    if (mode == Mode.NonBootstrapped) Versions.referenceVersion
     else Versions.dottyVersion
 
   def scalaLibraryMvnDeps = Nil
   def scalaCompilerClasspath =
-    if (mode == Mode.Bootstrapping)
+    if (mode == Mode.NonBootstrapped)
       Task {
         defaultResolver().classpath(
           Seq(mvn"org.scala-lang:scala3-compiler_3:${Versions.referenceVersion}")
         )
       }
     else
-      build.compiler(Mode.Bootstrapping).runClasspathAsJars
+      build.compiler(Mode.NonBootstrapped).runClasspathAsJars
 
   def scalaCompilerBridge =
-    if (mode == Mode.Bootstrapping)
+    if (mode == Mode.NonBootstrapped)
       Task(None)
     else
       Task {
-        Some(build.`sbt-bridge`(Mode.Bootstrapping).jar())
+        Some(build.`sbt-bridge`(Mode.NonBootstrapped).jar())
       }
 
   def scalaDocClasspath =
-    if (mode == Mode.Bootstrapping)
+    if (mode == Mode.NonBootstrapped)
       super.scalaDocClasspath
     else
       // Use the *bootstrapped* scaladoc to build all bootstrapped (that is, published) modules' scaladoc,
       // even the one of the bootstrapped scaladoc itself (it builds its own scaladoc)
-      build.scaladoc(Mode.Final).runClasspathAsJars
+      build.scaladoc(Mode.Bootstrapped).runClasspathAsJars
 
   def scalacOptions = super.scalacOptions() ++ Seq(
     "-feature",
@@ -86,7 +86,7 @@ trait Scala3Module extends Scala3JavaModule, ScalaModule:
       helper(baseOptions)
     }
     val extraOptions =
-      if (mode == Mode.Final) {
+      if (mode == Mode.Bootstrapped) {
         val rawExtraOptions = ScaladocOptions.scalacOptionsDocSettings()
         // Make -project-logo arg an absolute path, as scaladoc isn't going to run
         // from the root of the project with Mill
@@ -109,7 +109,7 @@ trait Scala3Module extends Scala3JavaModule, ScalaModule:
     def scalaCompilerClasspath = outer.scalaCompilerClasspath
 
   def enableBsp = super.enableBsp &&
-    (mode == Mode.Bootstrapping || Scala3Module.enableBspForFinalModules)
+    (mode == Mode.NonBootstrapped || Scala3Module.enableBspForBootstrappedModules)
 
 object Scala3Module:
-  def enableBspForFinalModules = false
+  def enableBspForBootstrappedModules = false

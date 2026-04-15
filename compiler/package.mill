@@ -155,7 +155,7 @@ trait Compiler extends CrossScala3Module:
     )
 
     def testArgsDefault = Task {
-      val bootstrapOnlyArgs = if (mode == Mode.Bootstrapping) Seq("--exclude-categories=dotty.BootstrappedOnlyTests") else Nil
+      val bootstrapOnlyArgs = if (mode == Mode.NonBootstrapped) Seq("--exclude-categories=dotty.BootstrappedOnlyTests") else Nil
       val extraArgs = Seq(
         "--run-listener=dotty.tools.ContextEscapeDetector",
         "--exclude-categories=dotty.VulpixMetaTests"

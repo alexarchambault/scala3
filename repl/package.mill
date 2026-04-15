@@ -36,7 +36,7 @@ trait Repl extends CrossScala3Module, DefaultTaskModule:
     )
     def compileResources =
       // Getting
-      //     Could not detect the parent class of task repl.bootstrapping.test.compileResources.super.test. Please report this at https://github.com/com-lihaoyi/mill/issues/new/choose .
+      //     Could not detect the parent class of task repl.non-bootstrapped.test.compileResources.super.test. Please report this at https://github.com/com-lihaoyi/mill/issues/new/choose .
       // when adding
       //     super[JavaModule].compileResources() ++
       Seq(testResources())
@@ -72,4 +72,4 @@ object `package` extends Cross[Repl](Mode.allValues), DefaultTaskModule:
 
   /** Runs the REPL - should be run in interactive mode (./mill -i) */
   def runRepl(args: String*): Task.Command[Unit] =
-    build.repl(Mode.Final).run(Task.Anon { mill.api.Args(args) })
+    build.repl(Mode.Bootstrapped).run(Task.Anon { mill.api.Args(args) })
