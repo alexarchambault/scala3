@@ -13,12 +13,12 @@ trait CrossScala3Module extends Cross.Module[Mode] with Scala3Module {
   def mode = crossValue
 
   def artifactNameParts =
-    if (mode == Mode.Bootstrapping)
+    if (mode == Mode.NonBootstrapped)
       super.artifactNameParts
     else
       Task {
         val baseValue = super.artifactNameParts()
-        if (baseValue.endsWith(Seq("final"))) baseValue.dropRight(1)
+        if (baseValue.endsWith(Seq("bootstrapped"))) baseValue.dropRight(1)
         else baseValue
       }
 
@@ -38,13 +38,13 @@ trait CrossScala3Module extends Cross.Module[Mode] with Scala3Module {
     doc: Boolean = true,
     transitive: Boolean = false
   ): Task.Command[Unit] =
-    if (mode == Mode.Bootstrapping)
+    if (mode == Mode.NonBootstrapped)
       Task.Command(publishDisabled())
     else
       super.publishLocal(localIvyRepo, sources, doc, transitive)
 
   override def publishLocalCached: T[Seq[PathRef]] =
-    if (mode == Mode.Bootstrapping)
+    if (mode == Mode.NonBootstrapped)
       Task {
         publishDisabled()
         Nil
@@ -53,7 +53,7 @@ trait CrossScala3Module extends Cross.Module[Mode] with Scala3Module {
       super.publishLocalCached
 
   override def publishM2Local(m2RepoPath: String): Task.Command[Seq[PathRef]] =
-    if (mode == Mode.Bootstrapping)
+    if (mode == Mode.NonBootstrapped)
       Task.Command {
         publishDisabled()
         Nil
@@ -62,7 +62,7 @@ trait CrossScala3Module extends Cross.Module[Mode] with Scala3Module {
       super.publishM2Local(m2RepoPath)
 
   override def publishM2LocalCached: T[Seq[PathRef]] =
-    if (mode == Mode.Bootstrapping)
+    if (mode == Mode.NonBootstrapped)
       Task {
         publishDisabled()
         Nil
@@ -80,7 +80,7 @@ trait CrossScala3Module extends Cross.Module[Mode] with Scala3Module {
     awaitTimeout: Int,
     stagingRelease: Boolean
   ): Task.Command[Unit] =
-    if (mode == Mode.Bootstrapping)
+    if (mode == Mode.NonBootstrapped)
       Task.Command(publishDisabled())
     else
       super.publish(
