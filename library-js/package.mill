@@ -25,7 +25,7 @@ trait LibraryJs extends SharedLibrarySettings with Scala3JsModule with Scala3Mim
   def pomSettings = super.pomSettings().copy(
     organization = "org.scala-js"
   )
-  def artifactName = "scalajs-scalalib" + (if (mode == Mode.Bootstrapping) "-bootstrapping" else "")
+  def artifactName = "scalajs-scalalib" + (if (mode == Mode.NonBootstrapped) "-non-bootstrapped" else "")
   // Original sbt build comment:
   // This is very tricky here since this is a Scala 3 project, but to be able to smoothly
   // migrate the ecosystem, we need to be able to evict the Scala 2 library from the classpath.
@@ -148,7 +148,7 @@ object `package` extends Cross[LibraryJs](Mode.allValues) {
 
   // this module is empty / has no sources
   trait Library3 extends CrossScala3Module with Scala3JsModule {
-    def artifactName = "scala3-library" + (if (mode == Mode.Bootstrapping) "-bootstrapping" else "")
+    def artifactName = "scala3-library" + (if (mode == Mode.NonBootstrapped) "-non-bootstrapped" else "")
     def moduleDeps = Seq(
       build.`library-js`()
     )

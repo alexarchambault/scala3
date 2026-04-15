@@ -15,7 +15,7 @@ trait ScaladocTestcases extends CrossScala3Module, mill.scala3buildhelper.Compil
     baseSources
   }
   def allSourceFiles =
-    if (mode == Mode.Bootstrapping)
+    if (mode == Mode.NonBootstrapped)
       Task {
         super.allSourceFiles().filter { ref =>
           !os.read(ref.path).contains("initially")

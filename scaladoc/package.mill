@@ -309,10 +309,10 @@ trait Scaladoc extends CrossScala3Module:
 
 object `package` extends Cross[Scaladoc](Mode.allValues):
   def generateScalaDocumentation(newDir: String = "", justAPI: Boolean = false): Task.Command[os.Path] =
-    build.scaladoc(Mode.Final).generateScalaDocumentation(newDir = newDir, justAPI = justAPI)
+    build.scaladoc(Mode.Bootstrapped).generateScalaDocumentation(newDir = newDir, justAPI = justAPI)
   def generateReferenceDocumentation(noRegenerateExpectedLinks: Boolean = false): Task.Command[os.Path] =
-    build.scaladoc(Mode.Final).generateReferenceDocumentation(noRegenerateExpectedLinks = noRegenerateExpectedLinks)
+    build.scaladoc(Mode.Bootstrapped).generateReferenceDocumentation(noRegenerateExpectedLinks = noRegenerateExpectedLinks)
   def generateTestcasesDocumentation(): Task.Command[os.Path] =
-    build.scaladoc(Mode.Final).generateTestcasesDocumentation()
+    build.scaladoc(Mode.Bootstrapped).generateTestcasesDocumentation()
   def generateSelfDocumentation(): Task.Command[os.Path] =
-    build.scaladoc(Mode.Final).generateSelfDocumentation()
+    build.scaladoc(Mode.Bootstrapped).generateSelfDocumentation()

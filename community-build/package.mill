@@ -9,24 +9,24 @@ import org.scalajs.ir.ScalaJSVersions
 
 // community-build module definition
 object `package` extends Scala3Module {
-  // Bootstrapping mode, so that we can import that module in IDEs seamlessly
-  def mode = Mode.Bootstrapping
+  // NonBootstrapped mode, so that we can import that module in IDEs seamlessly
+  def mode = Mode.NonBootstrapped
   def moduleDeps = Seq(
-    build.library(Mode.Bootstrapping)
+    build.library(Mode.NonBootstrapped)
   )
 
   def prepareCommunityBuild(): Task.Command[Unit] = Task.Command {
-    build.`sbt-bridge`(Mode.Final).publishLocal()()
+    build.`sbt-bridge`(Mode.Bootstrapped).publishLocal()()
     build.interfaces.publishLocal()()
-    build.tasty(Mode.Final).publishLocal()()
-    build.library(Mode.Final).publishLocal()()
-    build.library.`library-3`(Mode.Final).publishLocal()()
-    build.`tasty-inspector`(Mode.Final).publishLocal()()
-    build.scaladoc(Mode.Final).publishLocal()()
-    build.repl(Mode.Final).publishLocal()()
-    build.compiler(Mode.Final).publishLocal()()
-    build.`library-js`(Mode.Final).publishLocal()()
-    build.`library-js`.`library-3`(Mode.Final).publishLocal()()
+    build.tasty(Mode.Bootstrapped).publishLocal()()
+    build.library(Mode.Bootstrapped).publishLocal()()
+    build.library.`library-3`(Mode.Bootstrapped).publishLocal()()
+    build.`tasty-inspector`(Mode.Bootstrapped).publishLocal()()
+    build.scaladoc(Mode.Bootstrapped).publishLocal()()
+    build.repl(Mode.Bootstrapped).publishLocal()()
+    build.compiler(Mode.Bootstrapped).publishLocal()()
+    build.`library-js`(Mode.Bootstrapped).publishLocal()()
+    build.`library-js`.`library-3`(Mode.Bootstrapped).publishLocal()()
 
     val sbtInjectPluginsFile = test.forkWorkingDir() / "sbt-injected-plugins"
     os.write.over(

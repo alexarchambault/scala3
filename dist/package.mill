@@ -67,7 +67,7 @@ object `package` extends CoursierModule {
     nativeScalaCliLauncherUrl: Option[(version: String) => String] = None
   ): Task[PathRef] = {
 
-    val projects0 = build.projects(Mode.Final)
+    val projects0 = build.projects(Mode.Bootstrapped)
 
     // Staged repositories for the POMs / JARs built by each module of projects0
     val projectReposTask = Task.traverse(projects0)(_.publishLocalTestRepo)
@@ -131,7 +131,7 @@ object `package` extends CoursierModule {
       Dist.generateVersionFile(
         BuildCtx.workspaceRoot.toIO,
         dest.toIO,
-        build.library(Mode.Final).publishVersion(),
+        build.library(Mode.Bootstrapped).publishVersion(),
         System.err.println(_)
       )
 
