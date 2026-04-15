@@ -1,3 +1,4 @@
+// This file is used in the Mill build too. Do not modify this comment.
 
 object Shading {
 
