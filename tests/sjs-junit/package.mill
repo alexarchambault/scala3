@@ -15,16 +15,15 @@ import java.nio.file.AtomicMoveNotSupportedException
 import java.util.UUID
 
 // definition of the sjs-unit module
-// cross-compiled across two axes: a mode (bootstrapping / final) and a module kind (default, ESM, …)
-trait SjsUnit extends Cross.Module[ModeModuleKind] with Scala3Module with Scala3JsModule {
-  def mode = crossValue.mode
-  def customization = crossValue.customization
+trait SjsUnit extends Cross.Module[Customization] with Scala3Module with Scala3JsModule {
+  def mode: Mode
+  def customization = crossValue
 
   override def enableWebAssembly =
     customization == Customization.LatestESVersionWebAssembly
 
   def moduleDeps = Seq(
-    build.`library-js`(mode)
+    build.`library-js`()(using mode)
   )
   def mvnDeps = Seq(
     mvn"org.scala-js:scalajs-junit-test-runtime_2.13:${ScalaJSVersions.current}"
@@ -212,7 +211,17 @@ trait SjsUnit extends Cross.Module[ModeModuleKind] with Scala3Module with Scala3
   object test extends SjsUnitTests
 }
 
-object `package` extends Cross[SjsUnit](ModeModuleKind.allValues) {
+trait NonBootstrappedSjsUnit extends SjsUnit {
+  def mode = Mode.NonBootstrapped
+  def moduleDir: os.Path = super.moduleDir / os.up
+}
+
+trait BootstrappedSjsUnit extends SjsUnit {
+  def mode = Mode.Bootstrapped
+}
+
+object `package` extends Cross[BootstrappedSjsUnit](Customization.allValues) {
+  object `non-bootstrapped` extends Cross[NonBootstrappedSjsUnit](Customization.allValues)
 
   // no need to have a copy of this one for each cross-matrix entry, so it's factored here
 
@@ -266,19 +275,4 @@ object Customization:
       case Customization.ESM => List("esm")
       case Customization.LatestESVersion => List("latest-es-version")
       case Customization.LatestESVersionWebAssembly => List("latest-es-version-wasm")
-    })
-
-/** A [[Mode]] and a [[Customization]] */
-case class ModeModuleKind(mode: Mode, customization: Customization)
-
-object ModeModuleKind:
-  lazy val allValues =
-    for (mode <- Mode.allValues; kind <- Customization.allValues)
-      yield ModeModuleKind(mode, kind)
-
-  given Cross.ToSegments[ModeModuleKind] =
-    new Cross.ToSegments({
-      case ModeModuleKind(mode, customization) =>
-        summon[Cross.ToSegments[Mode]].convert(mode) :::
-          summon[Cross.ToSegments[Customization]].convert(customization)
     })

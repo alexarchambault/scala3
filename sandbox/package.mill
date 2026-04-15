@@ -11,4 +11,5 @@ trait SandboxScalajs extends CrossScala3Module, Scala3JsModule:
 
   object test extends Scala3JsTests
 
-object scalajs extends Cross[SandboxScalajs](Mode.allValues)
+object scalajs extends SandboxScalajs, CrossHelper[SandboxScalajs]:
+  object `non-bootstrapped` extends SandboxScalajs, CrossHelper.NonBootstrapped

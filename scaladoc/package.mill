@@ -307,12 +307,5 @@ trait Scaladoc extends CrossScala3Module:
       Seq(testSourceLinksSrc())
     }
 
-object `package` extends Cross[Scaladoc](Mode.allValues):
-  def generateScalaDocumentation(newDir: String = "", justAPI: Boolean = false): Task.Command[os.Path] =
-    build.scaladoc(Mode.Bootstrapped).generateScalaDocumentation(newDir = newDir, justAPI = justAPI)
-  def generateReferenceDocumentation(noRegenerateExpectedLinks: Boolean = false): Task.Command[os.Path] =
-    build.scaladoc(Mode.Bootstrapped).generateReferenceDocumentation(noRegenerateExpectedLinks = noRegenerateExpectedLinks)
-  def generateTestcasesDocumentation(): Task.Command[os.Path] =
-    build.scaladoc(Mode.Bootstrapped).generateTestcasesDocumentation()
-  def generateSelfDocumentation(): Task.Command[os.Path] =
-    build.scaladoc(Mode.Bootstrapped).generateSelfDocumentation()
+object `package` extends Scaladoc, CrossHelper[Scaladoc]:
+  object `non-bootstrapped` extends Scaladoc, CrossHelper.NonBootstrapped

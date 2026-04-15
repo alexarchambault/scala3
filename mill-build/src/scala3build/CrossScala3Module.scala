@@ -10,7 +10,7 @@ import mill.api.Task.Simple
  * Compiled once with a published compiler, and again with a bootstrapped one
  */
 trait CrossScala3Module extends Cross.Module[Mode] with Scala3Module {
-  def mode = crossValue
+  implicit def mode: Mode = crossValue
 
   def artifactNameParts =
     if (mode == Mode.NonBootstrapped)

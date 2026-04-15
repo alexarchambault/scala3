@@ -14,14 +14,12 @@ trait ScaladocTestcases extends CrossScala3Module, mill.scala3buildhelper.Compil
     assert(baseSources.exists(_.path == mainSources().path))
     baseSources
   }
-  def allSourceFiles =
-    if (mode == Mode.NonBootstrapped)
-      Task {
-        super.allSourceFiles().filter { ref =>
-          !os.read(ref.path).contains("initially")
-        }
-      }
-    else
-      super.allSourceFiles
 
-object `package` extends Cross[ScaladocTestcases](Mode.allValues)
+object `package` extends ScaladocTestcases, CrossHelper[ScaladocTestcases]:
+  object `non-bootstrapped` extends ScaladocTestcases, CrossHelper.NonBootstrapped {
+    def allSourceFiles = Task {
+      super.allSourceFiles().filter { ref =>
+        !os.read(ref.path).contains("initially")
+      }
+    }
+  }
