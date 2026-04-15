@@ -42,14 +42,14 @@ trait Scala3Module extends Scala3JavaModule, ScalaModule:
         )
       }
     else
-      build.compiler(Mode.NonBootstrapped).runClasspathAsJars
+      build.compiler.`non-bootstrapped`.runClasspathAsJars
 
   def scalaCompilerBridge =
     if (mode == Mode.NonBootstrapped)
       Task(None)
     else
       Task {
-        Some(build.`sbt-bridge`(Mode.NonBootstrapped).jar())
+        Some(build.`sbt-bridge`.`non-bootstrapped`.jar())
       }
 
   def scalaDocClasspath =
@@ -58,7 +58,7 @@ trait Scala3Module extends Scala3JavaModule, ScalaModule:
     else
       // Use the *bootstrapped* scaladoc to build all bootstrapped (that is, published) modules' scaladoc,
       // even the one of the bootstrapped scaladoc itself (it builds its own scaladoc)
-      build.scaladoc(Mode.Bootstrapped).runClasspathAsJars
+      build.scaladoc.runClasspathAsJars
 
   def scalacOptions = super.scalacOptions() ++ Seq(
     "-feature",

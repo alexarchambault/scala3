@@ -144,7 +144,8 @@ trait LibraryJs extends SharedLibrarySettings with Scala3JsModule with Scala3Mim
     MiMaFilters.ScalaLibrarySJS.BackwardsBreakingChanges
 }
 
-object `package` extends Cross[LibraryJs](Mode.allValues) {
+object `package` extends LibraryJs with CrossHelper[LibraryJs] {
+  object `non-bootstrapped` extends LibraryJs with CrossHelper.NonBootstrapped
 
   // this module is empty / has no sources
   trait Library3 extends CrossScala3Module with Scala3JsModule {
@@ -154,5 +155,7 @@ object `package` extends Cross[LibraryJs](Mode.allValues) {
     )
   }
 
-  object `library-3` extends Cross[Library3](Mode.allValues)
+  object `library-3` extends Library3 with CrossHelper[Library3] {
+    object `non-bootstrapped` extends Library3 with CrossHelper.NonBootstrapped
+  }
 }

@@ -66,9 +66,5 @@ trait Repl extends CrossScala3Module, DefaultTaskModule:
         replTestForkArgs()
     }
 
-object `package` extends Cross[Repl](Mode.allValues), DefaultTaskModule:
-  def defaultTask() = "runRepl"
-
-  /** Runs the REPL - should be run in interactive mode (./mill -i) */
-  def runRepl(args: String*): Task.Command[Unit] =
-    build.repl(Mode.Bootstrapped).run(Task.Anon { mill.api.Args(args) })
+object `package` extends Repl, CrossHelper[Repl]:
+  object `non-bootstrapped` extends Repl, CrossHelper.NonBootstrapped

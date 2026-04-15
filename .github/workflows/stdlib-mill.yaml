@@ -92,7 +92,7 @@ jobs:
 
 
       - name: Compile `scala-library-bootstrapped`
-        run: ./mill -i library.bootstrapped.compile
+        run: ./mill -i library.compile
 
   test-scala-library-bootstrapped:
     name: Bootstrapped Library Unit Tests
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - run: ./mill -i library.bootstrapped.test
+      - run: ./mill -i library.test
 
   scala3-library-bootstrapped:
     runs-on: ubuntu-latest
@@ -111,7 +111,7 @@ jobs:
 
 
       - name: Compile `scala3-library-bootstrapped`
-        run: ./mill -i library.bootstrapped.compile
+        run: ./mill -i library.compile
 
   tasty-core-bootstrapped:
     runs-on: ubuntu-latest
@@ -121,7 +121,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Compile `tasty-core-bootstrapped`
-        run: ./mill -i tasty.bootstrapped.compile
+        run: ./mill -i tasty.compile
 
   scala3-compiler-bootstrapped:
     runs-on: ubuntu-latest
@@ -131,7 +131,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Compile `scala3-compiler-bootstrapped`
-        run: ./mill -i compiler.bootstrapped.compile
+        run: ./mill -i compiler.compile
 
   scala3-sbt-bridge-bootstrapped:
     runs-on: ubuntu-latest
@@ -141,7 +141,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Compile `scala3-sbt-bridge-bootstrapped`
-        run: ./mill -i sbt-bridge.bootstrapped.compile
+        run: ./mill -i sbt-bridge.compile
 
   scala3-staging:
     runs-on: ubuntu-latest
@@ -151,7 +151,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Compile `scala3-staging`
-        run: ./mill -i staging.bootstrapped.compile
+        run: ./mill -i staging.compile
 
   scala3-tasty-inspector:
     runs-on: ubuntu-latest
@@ -161,9 +161,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Compile `scala3-staging`
-        run: ./mill -i staging.bootstrapped.compile
+        run: ./mill -i staging.compile
       - name: Compile `scala3-tasty-inspector`
-        run: ./mill -i tasty-inspector.bootstrapped.compile
+        run: ./mill -i tasty-inspector.compile
 
   scala-library-sjs:
     runs-on: ubuntu-latest
@@ -174,9 +174,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Compile `scala3-staging`
-        run: ./mill -i staging.bootstrapped.compile
+        run: ./mill -i staging.compile
       - name: Compile `scala-library` for Scala.js
-        run: ./mill -i library-js.bootstrapped.compile
+        run: ./mill -i library-js.compile
 
   scala3-library-sjs:
     runs-on: ubuntu-latest
@@ -186,9 +186,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Compile `scala3-staging`
-        run: ./mill -i staging.bootstrapped.compile
+        run: ./mill -i staging.compile
       - name: Compile `scala3-library` for Scala.js
-        run: ./mill -i library-js.bootstrapped.compile
+        run: ./mill -i library-js.compile
 
   repl:
     runs-on: ubuntu-latest
@@ -199,7 +199,7 @@ jobs:
 
 
       - name: Compile REPL
-        run: ./mill -i repl.bootstrapped.compile
+        run: ./mill -i repl.compile
 
   scaladoc:
     runs-on: ubuntu-latest
@@ -210,7 +210,7 @@ jobs:
 
 
       - name: Compile `scaladoc`
-        run: ./mill -i scaladoc.bootstrapped.compile
+        run: ./mill -i scaladoc.compile
 
   presentation-compiler:
     runs-on: ubuntu-latest
@@ -220,7 +220,7 @@ jobs:
 
 
       - name: Compile `scala3-presentation-compiler`
-        run: ./mill -i presentation-compiler.bootstrapped.compile
+        run: ./mill -i presentation-compiler.compile
 
   language-server:
     runs-on: ubuntu-latest
@@ -230,7 +230,7 @@ jobs:
 
 
       - name: Compile `scala3-language-server`
-        run: ./mill -i language-server.bootstrapped.compile
+        run: ./mill -i language-server.compile
 
   #################################################################################################
   ########################################### MiMa JOBS ###########################################
@@ -279,10 +279,10 @@ jobs:
 
 
       - name: Report MiMa issues in `scala-library-bootstrapped`
-        run: ./mill -i library.bootstrapped.mimaReportBinaryIssues
+        run: ./mill -i library.mimaReportBinaryIssues
 
       - name: Report missingLink checks
-        run: ./mill -i library.bootstrapped.missinglinkCheck
+        run: ./mill -i library.missinglinkCheck
 
   mima-tasty-core-bootstrapped:
     runs-on: ubuntu-latest
@@ -293,7 +293,7 @@ jobs:
 
 
       - name: Report MiMa issues in `tasty-core-bootstrapped`
-        run: ./mill -i tasty.bootstrapped.mimaReportBinaryIssues
+        run: ./mill -i tasty.mimaReportBinaryIssues
 
   mima-scala-library-sjs:
     runs-on: ubuntu-latest
@@ -304,7 +304,7 @@ jobs:
 
 
       - name: Report MiMa issues in `scala-library-sjs`
-        run: ./mill -i library-js.bootstrapped.mimaReportBinaryIssues
+        run: ./mill -i library-js.mimaReportBinaryIssues
 
   #################################################################################################
   ########################################### TEST JOBS ###########################################
@@ -334,7 +334,7 @@ jobs:
           # not sure why this one doesn't pass on the CI, while it passes locally for me
           echo "magic-offset-header-d_wrapper.scala" >> compiler/test/dotc/neg-scala2-library-tasty.excludelist
       - name: Test `scala3-compiler-bootstrapped`
-        run: ./mill -i compiler.bootstrapped.test
+        run: ./mill -i compiler.test
 
   test-scala3-bootstrapped-pos-coverage:
     runs-on: ubuntu-latest
@@ -347,8 +347,8 @@ jobs:
         run: |
           # seems we need to disable this one on the Mill CI only for --enableCoveragePhase=true
           echo "magic-offset-header-d_wrapper.scala" >> compiler/test/dotc/neg-scala2-library-tasty.excludelist
-      - name: Run `compiler.bootstrapped.testCompilation --enable-coverage-phase=true`
-        run: ./mill -i compiler.bootstrapped.testCompilation --enableCoveragePhase=true
+      - name: Run `compiler.testCompilation --enable-coverage-phase=true`
+        run: ./mill -i compiler.testCompilation --enableCoveragePhase=true
 
   test-scala3-sbt-bridge-nonbootstrapped:
     runs-on: ubuntu-latest
@@ -368,7 +368,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Test `scala3-sbt-bridge-bootstrapped`
-        run: ./mill -i sbt-bridge.bootstrapped.test
+        run: ./mill -i sbt-bridge.test
 
   test-tasty-core-nonbootstrapped:
     runs-on: ubuntu-latest
@@ -388,7 +388,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Test `tasty-core-bootstrapped`
-        run: ./mill -i tasty.bootstrapped.test
+        run: ./mill -i tasty.test
 
   test-scala-js:
     runs-on: ubuntu-latest
@@ -401,19 +401,19 @@ jobs:
         with:
           node-version: '24.x'
       - name: Scala.js compiler tests
-        run: ./mill -i "sjs-compiler-tests.bootstrapped.test"
+        run: ./mill -i "sjs-compiler-tests.test"
       - name: Scala.js sandbox
-        run: ./mill -i sandbox.scalajs.bootstrapped.run + sandbox.scalajs.bootstrapped.test
+        run: ./mill -i sandbox.scalajs.run + sandbox.scalajs.test
       - name: Scala.js JUnit tests
         run: |
-          ./mill -i tests.sjs-junit.bootstrapped.default.test
-          ./mill -i tests.sjs-junit.bootstrapped.esm.test
+          ./mill -i tests.sjs-junit.default.test
+          ./mill -i tests.sjs-junit.esm.test
       - name: Scala.js JUnit tests with latest ES version
         run: |
-          ./mill -i tests.sjs-junit.bootstrapped.latest-es-version.test
+          ./mill -i tests.sjs-junit.latest-es-version.test
       - name: Scala.js JUnit tests with WebAssembly
         run: |
-          ./mill -i tests.sjs-junit.bootstrapped.latest-es-version-wasm.test
+          ./mill -i tests.sjs-junit.latest-es-version-wasm.test
   # TODO Scala.js on Windows
 
   test-repl:
@@ -424,7 +424,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Test REPL
-        run: ./mill -i repl.bootstrapped.test
+        run: ./mill -i repl.test
 
   test-presentation-compiler:
     runs-on: ubuntu-latest
@@ -434,7 +434,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Test Presentation Compiler
-        run: ./mill -i presentation-compiler.bootstrapped.test
+        run: ./mill -i presentation-compiler.test
 
   test-language-server:
     runs-on: ubuntu-latest
@@ -444,7 +444,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Test Language Server
-        run: ./mill -i language-server.bootstrapped.test
+        run: ./mill -i language-server.test
 
   # Not implemented in Mill yet
   # scripted-tests:
@@ -525,4 +525,4 @@ jobs:
 
 
       - name: Generate Documentation of the Standard Library
-        run: ./mill -i show library.bootstrapped.docJar
+        run: ./mill -i show library.docJar

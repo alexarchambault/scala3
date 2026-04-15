@@ -63,4 +63,5 @@ trait LanguageServer extends CrossScala3Module:
         super.runClasspath()
     }
 
-object `package` extends Cross[LanguageServer](Mode.allValues)
+object `package` extends LanguageServer, CrossHelper[LanguageServer]:
+  object `non-bootstrapped` extends LanguageServer, CrossHelper.NonBootstrapped

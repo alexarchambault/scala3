@@ -9,4 +9,5 @@ trait PresentationCompilerTestcases extends CrossScala3Module, mill.scala3buildh
     build.compiler()
   )
 
-object `package` extends Cross[PresentationCompilerTestcases](Mode.allValues)
+object `package` extends PresentationCompilerTestcases, CrossHelper[PresentationCompilerTestcases]:
+  object `non-bootstrapped` extends PresentationCompilerTestcases, CrossHelper.NonBootstrapped
