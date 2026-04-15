@@ -15,4 +15,5 @@ trait ScaladocTestcases extends CrossScala3Module, mill.scala3buildhelper.Compil
     baseSources
   }
 
-object `package` extends Cross[ScaladocTestcases](Mode.allValues)
+object `package` extends ScaladocTestcases, CrossHelper[ScaladocTestcases]:
+  object `non-bootstrapped` extends ScaladocTestcases, CrossHelper.NonBootstrapped

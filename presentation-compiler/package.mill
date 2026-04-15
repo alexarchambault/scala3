@@ -162,4 +162,5 @@ trait PresentationCompiler extends CrossScala3Module:
       super.runClasspath()
     }
 
-object `package` extends Cross[PresentationCompiler](Mode.allValues)
+object `package` extends PresentationCompiler, CrossHelper[PresentationCompiler]:
+  object `non-bootstrapped` extends PresentationCompiler, CrossHelper.NonBootstrapped

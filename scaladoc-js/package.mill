@@ -16,7 +16,9 @@ object `package` extends Module:
 
     def css = Task.Source("css")
 
-  object common extends Cross[Common](Mode.allValues)
+  object common extends Common, CrossHelper[Common]:
+    object `non-bootstrapped` extends Common, CrossHelper.NonBootstrapped
+
 
   trait Contributors extends CrossScala3Module, Scala3JsModule:
     def moduleDeps = Seq(
@@ -24,7 +26,8 @@ object `package` extends Module:
     )
     def css = Task.Source("css")
 
-  object contributors extends Cross[Contributors](Mode.allValues)
+  object contributors extends Contributors, CrossHelper[Contributors]:
+    object `non-bootstrapped` extends Contributors, CrossHelper.NonBootstrapped
 
   trait Main extends CrossScala3Module, Scala3JsModule:
     def moduleDeps = Seq(
@@ -33,4 +36,5 @@ object `package` extends Module:
 
     object test extends Scala3JsTests
 
-  object main extends Cross[Main](Mode.allValues)
+  object main extends Main, CrossHelper[Main]:
+    object `non-bootstrapped` extends Main, CrossHelper.NonBootstrapped

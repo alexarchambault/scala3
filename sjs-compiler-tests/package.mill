@@ -43,4 +43,6 @@ trait SjsCompilerTests extends CrossScala3Module {
   }
 }
 
-object `package` extends Cross[SjsCompilerTests](Mode.allValues)
+object `package` extends SjsCompilerTests with CrossHelper[SjsCompilerTests] {
+  object `non-bootstrapped` extends SjsCompilerTests with CrossHelper.NonBootstrapped
+}

@@ -23,4 +23,5 @@ trait Tasty extends CrossScala3Module, Scala3Mima:
       "EXPECTED_TASTY_VERSION" -> Versions.expectedTastyVersion
     )
 
-object `package` extends Cross[Tasty](Mode.allValues)
+object `package` extends Tasty, CrossHelper[Tasty]:
+  object `non-bootstrapped` extends Tasty, CrossHelper.NonBootstrapped

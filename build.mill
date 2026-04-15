@@ -19,17 +19,17 @@ import scala3build.*
 import java.io.File
 
 // projects published locally by "./mill publishLocal" and put in the distribution
-def projects(mode: Mode) = Seq(
-  build.library(mode),
-  build.compiler(mode),
+def projects(implicit mode: Mode) = Seq(
+  build.library(),
+  build.compiler(),
   build.interfaces,
-  build.library.`library-3`(mode),
-  build.repl(mode),
-  build.`sbt-bridge`(mode), // sbt build comment: for scala-cli
-  build.staging(mode),
-  build.`tasty-inspector`(mode),
-  build.scaladoc(mode),
-  build.tasty(mode)
+  build.library.`library-3`(),
+  build.repl(),
+  build.`sbt-bridge`(), // sbt build comment: for scala-cli
+  build.staging(),
+  build.`tasty-inspector`(),
+  build.scaladoc(),
+  build.tasty()
 )
 
 
@@ -42,20 +42,20 @@ private def insertClasspathInArgs(args: List[String], cp: String): List[String] 
 /** Runs scalac built from sources */
 def scalac(args0: String*): Task.Command[Unit] = {
   val mode = Mode.NonBootstrapped
-  val project = build.compiler(mode)
+  val project = build.compiler()(using mode)
   val withCompilerExtraClassPath =
     if (args0.contains("-with-compiler"))
       Task.Anon {
-        val externalDeps = build.compiler(mode).resolvedMvnDeps().map(_.path)
+        val externalDeps = build.compiler()(using mode).resolvedMvnDeps().map(_.path)
         def findArtifactPath(name: String) =
           externalDeps.find(_.last.startsWith(name)).getOrElse {
             Task.fail(s"Cannot find $name in compiler class path")
           }
 
         val dottyInterfaces = build.interfaces.jar().path.toString
-        val dottyStaging = build.staging(mode).jar().path.toString
-        val dottyTastyInspector = build.`tasty-inspector`(mode).jar().path.toString
-        val tastyCore = build.tasty(mode).jar().path.toString
+        val dottyStaging = build.staging()(using mode).jar().path.toString
+        val dottyTastyInspector = build.`tasty-inspector`()(using mode).jar().path.toString
+        val tastyCore = build.tasty()(using mode).jar().path.toString
         val asm = findArtifactPath("scala-asm").toString
         val compilerInterface = findArtifactPath("compiler-interface").toString
         Seq(dottyInterfaces, asm, dottyStaging, dottyTastyInspector, tastyCore, compilerInterface)
@@ -64,8 +64,8 @@ def scalac(args0: String*): Task.Command[Unit] = {
       Task.Anon(Nil)
   Task.Command(exclusive = true) {
 
-    val stdlib = build.library(mode).jar().path.toString
-    val dottyCompiler = build.compiler(mode).jar().path.toString
+    val stdlib = build.library()(using mode).jar().path.toString
+    val dottyCompiler = build.compiler()(using mode).jar().path.toString
 
     val decompile = args0.contains("-decompile")
     val printTasty = args0.contains("-print-tasty")
@@ -118,7 +118,7 @@ def publishLocal(
   sources: Boolean = true,
   doc: Boolean = false // much faster without this
 ): Task.Command[Unit] = {
-  val projects0 = projects(Mode.Bootstrapped)
+  val projects0 = projects(using Mode.Bootstrapped)
   val tasks = Task.traverse(projects0)(_.publishLocal(localIvyRepo = localIvyRepo, sources = sources, doc = doc))
   Task.Command {
     tasks()
@@ -141,7 +141,7 @@ def testCompilation(
   @arg(doc = "substring of the path of the tests file")
   filter: Args
 ): Task.Command[Unit] =
-  build.compiler(Mode.Bootstrapped).testCompilation(
+  build.compiler.testCompilation(
     fromTasty = fromTasty,
     updateCheckfiles = updateCheckfiles,
     failed = failed,

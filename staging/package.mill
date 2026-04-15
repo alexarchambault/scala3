@@ -30,4 +30,5 @@ trait Staging extends CrossScala3Module:
       super.testArgsDefault() ++ bootstrapOnlyArgs
     }
 
-object `package` extends Cross[Staging](Mode.allValues)
+object `package` extends Staging, CrossHelper[Staging]:
+  object `non-bootstrapped` extends Staging, CrossHelper.NonBootstrapped

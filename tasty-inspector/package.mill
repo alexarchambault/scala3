@@ -9,4 +9,5 @@ trait TastyInspector extends CrossScala3Module:
     build.compiler()
   )
 
-object `package` extends Cross[TastyInspector](Mode.allValues)
+object `package` extends TastyInspector, CrossHelper[TastyInspector]:
+  object `non-bootstrapped` extends TastyInspector, CrossHelper.NonBootstrapped

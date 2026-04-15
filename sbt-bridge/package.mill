@@ -21,4 +21,5 @@ trait SbtBridge extends CrossScala3Module:
         .exclude(("org.scala-lang", "*"))
     )
 
-object `package` extends Cross[SbtBridge](Mode.allValues)
+object `package` extends SbtBridge, CrossHelper[SbtBridge]:
+  object `non-bootstrapped` extends SbtBridge, CrossHelper.NonBootstrapped
