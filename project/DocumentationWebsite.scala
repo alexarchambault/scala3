@@ -1,8 +1,9 @@
+// This file is used in the Mill build too. Do not modify this comment.
+
 import java.io.File
 import java.net.URI
 import java.nio.file.Paths
 import sbt._
-import Build._
 
 object DocumentationWebsite {
   def generateStaticAssets(

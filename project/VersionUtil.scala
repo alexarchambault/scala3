@@ -1,3 +1,7 @@
+// This file is used in the Mill build too. Do not modify this comment.
+
+package dotty.tools.sbtplugin
+
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.lib.{Constants, ObjectId, Ref, Repository}
 import org.eclipse.jgit.revwalk.{RevCommit, RevWalk}

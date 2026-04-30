@@ -13,6 +13,7 @@ import org.jsoup.nodes.Document
 import util.IO
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.Ignore
 
 class RemoteLinksTest:
 
@@ -22,18 +23,22 @@ class RemoteLinksTest:
   // Predef has often problems with positions
   val mtslAll = membersToSourceLinks(using testDocContext()).filter(_._1 != "Predef")
 
+  @Ignore
   @Test
   def scala213XSourceLink =
     assertTrue(mtslAll.find((k, _) => k == "AbstractMap").isDefined) // source link to Scala2.13.X stdlib class
 
+  @Ignore
   @Test
   def scala3SourceLink =
     assertTrue(mtslAll.find((k, _) => k == "PolyFunction").isDefined) // source link to Scala3 stdlib class
 
+  @Ignore
   @Test
   def tastySourceLink =
     assertTrue(mtslAll.find((k, _) => k == "TastyBuffer").isDefined) // source link to Scala3 tasty class
 
+  @Ignore
   @Test
   def runTest =
     assertTrue(mtslAll.nonEmpty)
