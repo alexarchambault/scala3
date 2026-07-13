@@ -3,8 +3,6 @@ package dotty.tools.dotc.util
 import java.net.URLClassLoader
 import java.nio.file.Paths
 
-import dotty.tools.io.AbstractFileClassLoader
-
 object ClasspathFromClassloader {
 
   /** Attempt to recreate a classpath from a classloader.
@@ -27,7 +25,7 @@ object ClasspathFromClassloader {
             classpathBuff ++=
               cl.getURLs.iterator.map(url => Paths.get(url.toURI).toAbsolutePath.toString)
           case _ =>
-            if cl.getClass.getName == classOf[AbstractFileClassLoader].getName then
+            if cl.getClass.getSimpleName == "AbstractFileClassLoader" then
               // HACK: We can't just collect the classpath from arbitrary parent
               // classloaders since the current classloader might intentionally
               // filter loading classes from its parent (for example
